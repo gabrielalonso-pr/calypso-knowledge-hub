@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calypso Knowledge Hub</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        <span class="logo-name">Calypso <strong>Knowledge Hub</strong></span>
+      </div>
+      <nav class="product-nav" aria-label="Productos">
+        <button class="product-btn active" data-product="forward-fx">Forward FX</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <div class="product-intro">
+      <div>
+        <h1 id="product-title">Forward FX</h1>
+        <p class="product-desc">
+          Contrato de compraventa de divisas a precio fijado hoy para liquidación futura.
+          Basado en <strong>Covered Interest Rate Parity (CIP)</strong>.
+        </p>
+      </div>
+      <div class="tag-group">
+        <span class="tag tag--transferible">Transferible</span>
+      </div>
+    </div>
+
+    <div class="simulator-grid">
+
+      <!-- ── PANEL IZQUIERDO: Inputs ──────────────────────────────────────── -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Parámetros</h2>
+          <button id="btn-reset" class="btn-ghost" type="button">↺ Resetear</button>
+        </div>
+
+        <fieldset class="field-group">
+          <legend>Contrato</legend>
+
+          <div class="field-row">
+            <label for="f-direction">Dirección</label>
+            <select id="f-direction" data-field="direction">
+              <option value="buy">Buy — comprar base</option>
+              <option value="sell">Sell — vender base</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <label for="f-pair">Par de divisas</label>
+            <select id="f-pair" data-field="currencyPair"></select>
+          </div>
+
+          <div class="field-row">
+            <label for="f-notional-base">
+              Nocional (<span class="dyn-label" id="lbl-base">USD</span>)
+              <button class="dict-btn" data-dict="nocional" type="button" aria-label="Ver definición de Nocional">?</button>
+            </label>
+            <input type="number" id="f-notional-base" data-field="notionalBase" min="0" step="10000">
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Fechas</legend>
+
+          <div class="field-row">
+            <label for="f-trade-date">Fecha trade</label>
+            <input type="date" id="f-trade-date" data-field="tradeDate">
+          </div>
+
+          <div class="field-row">
+            <label for="f-value-date">Fecha valor</label>
+            <input type="date" id="f-value-date" data-field="valueDate">
+          </div>
+
+          <div class="field-row">
+            <label for="f-days">
+              Días al vencimiento
+              <button class="dict-btn" data-dict="dias_vencimiento" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <input type="number" id="f-days" data-field="days" min="1" step="1">
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Tasas de mercado</legend>
+
+          <div class="field-row">
+            <label for="f-spot">
+              Spot Rate <span class="dyn-label" id="lbl-pair-spot">(USD/MXN)</span>
+              <button class="dict-btn" data-dict="spot_rate" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <input type="number" id="f-spot" data-field="spot" step="0.0001" min="0">
+          </div>
+
+          <div class="field-row">
+            <label for="f-rate-base">
+              Tasa <span class="dyn-label" id="lbl-rate-base">USD</span> (% anual)
+              <button class="dict-btn" data-dict="tasa_base" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="input-unit">
+              <input type="number" id="f-rate-base" data-field="rateBase" step="0.01" min="0">
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="f-rate-quote">
+              Tasa <span class="dyn-label" id="lbl-rate-quote">MXN</span> (% anual)
+              <button class="dict-btn" data-dict="tasa_cotizada" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="input-unit">
+              <input type="number" id="f-rate-quote" data-field="rateQuote" step="0.01" min="0">
+              <span class="unit-label">%</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="f-daycount">
+              Convención días
+              <button class="dict-btn" data-dict="convencion_dias" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <select id="f-daycount" data-field="dayCount">
+              <option value="360">ACT/360</option>
+              <option value="365">ACT/365</option>
+            </select>
+          </div>
+        </fieldset>
+      </section>
+
+      <!-- ── PANEL DERECHO: Outputs ───────────────────────────────────────── -->
+      <section class="panel panel--outputs">
+        <div class="panel-head">
+          <h2>Resultados</h2>
+          <span class="panel-hint">Edita cualquier resultado para invertir el cálculo</span>
+        </div>
+
+        <fieldset class="field-group field-group--highlight">
+          <legend>Precio del forward</legend>
+
+          <div class="field-row output-row">
+            <label for="f-forward-rate">
+              Forward Rate
+              <button class="dict-btn" data-dict="forward_rate" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="output-wrap">
+              <input type="number" id="f-forward-rate" data-field="forwardRate" step="0.0001"
+                     class="output-input" placeholder="calculado">
+              <button class="lock-btn hidden" data-lock="forwardRate" type="button" title="Clic para desbloquear">🔒</button>
+            </div>
+            <small class="solve-hint" id="hint-forward-rate"></small>
+          </div>
+
+          <div class="field-row output-row">
+            <label for="f-forward-points">
+              Forward Points (pips)
+              <button class="dict-btn" data-dict="forward_points" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="output-wrap">
+              <input type="number" id="f-forward-points" data-field="forwardPoints" step="0.0001"
+                     class="output-input" placeholder="calculado">
+              <button class="lock-btn hidden" data-lock="forwardPoints" type="button" title="Clic para desbloquear">🔒</button>
+            </div>
+            <small class="solve-hint" id="hint-forward-points"></small>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Flujos al vencimiento</legend>
+
+          <div class="cashflow-visual">
+            <div class="cf-leg cf-leg--pay">
+              <span class="cf-dir">Paga</span>
+              <span class="cf-amount" id="cf-pay-amount">—</span>
+              <span class="cf-ccy"   id="cf-pay-ccy">—</span>
+            </div>
+            <div class="cf-arrow">⟷</div>
+            <div class="cf-leg cf-leg--receive">
+              <span class="cf-dir">Recibe</span>
+              <span class="cf-amount" id="cf-recv-amount">—</span>
+              <span class="cf-ccy"   id="cf-recv-ccy">—</span>
+            </div>
+          </div>
+
+          <div class="field-row output-row">
+            <label for="f-notional-quote">
+              Nocional (<span class="dyn-label" id="lbl-quote">MXN</span>)
+              <button class="dict-btn" data-dict="nocional_cotizada" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="output-wrap">
+              <input type="number" id="f-notional-quote" data-field="notionalQuote"
+                     class="output-input" placeholder="calculado">
+              <button class="lock-btn hidden" data-lock="notionalQuote" type="button" title="Clic para desbloquear">🔒</button>
+            </div>
+            <small class="solve-hint" id="hint-notional-quote"></small>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Valoración MTM</legend>
+          <p class="field-group-note">
+            Al inicio NPV = 0 (precio justo). Mueve el <em>Spot mercado</em> para simular cambios de mercado.
+          </p>
+
+          <div class="field-row output-row">
+            <label for="f-spot-market">
+              Spot mercado actual
+              <button class="dict-btn" data-dict="spot_mercado" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="output-wrap">
+              <input type="number" id="f-spot-market" data-field="spotMarket" step="0.0001"
+                     class="output-input" placeholder="= Spot trade">
+            </div>
+          </div>
+
+          <div class="field-row output-row">
+            <label for="f-npv">
+              NPV (<span class="dyn-label" id="lbl-npv-ccy">MXN</span>)
+              <button class="dict-btn" data-dict="npv" type="button" aria-label="Ver definición">?</button>
+            </label>
+            <div class="output-wrap">
+              <input type="number" id="f-npv" data-field="npv"
+                     class="output-input" placeholder="calculado">
+              <button class="lock-btn hidden" data-lock="npv" type="button" title="Clic para desbloquear">🔒</button>
+            </div>
+            <small class="solve-hint" id="hint-npv"></small>
+          </div>
+        </fieldset>
+
+        <div class="formula-box">
+          <span class="formula-title">
+            Fórmula CIP aplicada
+            <button class="dict-btn" data-dict="covered_interest_parity" type="button" aria-label="Ver definición">?</button>
+          </span>
+          <div class="formula-math" id="formula-math"></div>
+          <div class="formula-substituted" id="formula-substituted"></div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ── Tooltip del diccionario ────────────────────────────────────────── -->
+  <div id="dict-tooltip" class="dict-tooltip hidden" role="tooltip" aria-hidden="true">
+    <button class="tooltip-close" id="tooltip-close" type="button" aria-label="Cerrar">✕</button>
+    <div class="tooltip-term-row">
+      <span class="tooltip-term" id="tt-term"></span>
+      <span class="tooltip-cat" id="tt-cat"></span>
+    </div>
+    <p class="tooltip-def" id="tt-def"></p>
+    <div class="tooltip-detail" id="tt-formula-row">
+      <span class="tooltip-detail-label">Fórmula:</span>
+      <code id="tt-formula"></code>
+    </div>
+    <div class="tooltip-detail" id="tt-origin-row">
+      <span class="tooltip-detail-label">Origen:</span>
+      <span id="tt-origin"></span>
+    </div>
+  </div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/dictionary.js"></script>
+  <script src="js/loader.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
