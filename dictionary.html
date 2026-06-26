@@ -21,13 +21,23 @@
     </div>
 
     <nav class="sidebar-nav">
-
       <div class="nav-section">
         <span class="nav-section-label">Knowledge</span>
-        <a href="dictionary.html" class="nav-item active">
+
+        <!-- Diccionario Calypso + sub-items de módulos -->
+        <a href="dictionary.html" class="nav-item nav-item--parent active" id="nav-dict-parent">
           <span class="nav-icon">📖</span>
           <span class="nav-label">Diccionario Calypso</span>
+          <span class="nav-arrow">▾</span>
         </a>
+        <div class="nav-sub" id="nav-dict-sub">
+          <a href="dictionary.html#mod-forward_fx"          class="nav-subitem"><span class="nav-subitem-icon">↔</span><span class="nav-label">Forward FX</span></a>
+          <a href="dictionary.html#mod-static_data"         class="nav-subitem"><span class="nav-subitem-icon">🗂</span><span class="nav-label">Static Data</span></a>
+          <a href="dictionary.html#mod-pricing_environment" class="nav-subitem"><span class="nav-subitem-icon">⚡</span><span class="nav-label">Pricing Environment</span></a>
+          <a href="dictionary.html#mod-front_office"        class="nav-subitem"><span class="nav-subitem-icon">📈</span><span class="nav-label">Front Office</span></a>
+          <a href="dictionary.html#mod-post_trade"          class="nav-subitem"><span class="nav-subitem-icon">✅</span><span class="nav-label">Post-Trade</span></a>
+        </div>
+
         <a href="glossary.html" class="nav-item">
           <span class="nav-icon">✏️</span>
           <span class="nav-label">Mi Glosario</span>
@@ -49,7 +59,6 @@
           <span class="nav-label">Editor XML</span>
         </a>
       </div>
-
     </nav>
   </aside>
 
@@ -107,9 +116,9 @@
 <script>
 (async () => {
   /* ── Sidebar toggle ─────────────────────────────────────────────────────── */
-  const sidebar       = document.getElementById('sidebar');
-  const toggleBtn     = document.getElementById('sidebar-toggle');
-  const headerToggle  = document.getElementById('header-toggle');
+  const sidebar      = document.getElementById('sidebar');
+  const toggleBtn    = document.getElementById('sidebar-toggle');
+  const headerToggle = document.getElementById('header-toggle');
 
   function setSidebarCollapsed(collapsed) {
     sidebar.classList.toggle('sidebar--collapsed', collapsed);
@@ -118,26 +127,62 @@
     localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
   }
 
-  const storedCollapsed = localStorage.getItem('sidebar_collapsed') === '1';
-  setSidebarCollapsed(storedCollapsed);
+  setSidebarCollapsed(localStorage.getItem('sidebar_collapsed') === '1');
+  toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
 
-  toggleBtn.addEventListener('click', () =>
-    setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
-  headerToggle.addEventListener('click', () =>
-    setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  /* ── Sub-menú del diccionario en sidebar ────────────────────────────────── */
+  const dictParent = document.getElementById('nav-dict-parent');
+  const dictSub    = document.getElementById('nav-dict-sub');
 
-  /* ── Cargar diccionario ─────────────────────────────────────────────────── */
+  function setSubCollapsed(collapsed) {
+    dictSub.classList.toggle('nav-sub--collapsed', collapsed);
+    dictParent.classList.toggle('collapsed', collapsed);
+    localStorage.setItem('dict_sub_collapsed', collapsed ? '1' : '0');
+  }
+
+  setSubCollapsed(localStorage.getItem('dict_sub_collapsed') === '1');
+  dictParent.addEventListener('click', (e) => {
+    if (e.target.closest('a') === dictParent) {
+      e.preventDefault();
+      setSubCollapsed(!dictSub.classList.contains('nav-sub--collapsed'));
+    }
+  });
+
+  /* Resaltar sub-item activo según anchor */
+  const hash = location.hash;
+  if (hash) {
+    dictSub.querySelectorAll('.nav-subitem').forEach(a => {
+      if (a.getAttribute('href').endsWith(hash)) a.classList.add('active');
+    });
+  }
+
+  /* ── Módulos del diccionario ────────────────────────────────────────────── */
   const MODULE_LABELS = {
-    forward_fx:          { label: 'Forward FX', icon: '↔', desc: 'Conceptos del simulador de Forward FX basados en Covered Interest Rate Parity (CIP)' },
-    static_data:         { label: 'Static Data', icon: '🗂', desc: 'Configuración base que debe existir en Calypso antes de capturar cualquier trade' },
-    pricing_environment: { label: 'Pricing Environment', icon: '⚡', desc: 'El motor que determina cómo Calypso valúa cada producto' },
+    forward_fx:          { label: 'Forward FX',                   icon: '↔',  desc: 'Conceptos del simulador de Forward FX basados en Covered Interest Rate Parity (CIP)' },
+    static_data:         { label: 'Static Data',                  icon: '🗂', desc: 'Configuración base que debe existir en Calypso antes de capturar cualquier trade' },
+    pricing_environment: { label: 'Pricing Environment',          icon: '⚡', desc: 'El motor que determina cómo Calypso valúa cada producto' },
     front_office:        { label: 'Front Office & Trade Capture', icon: '📈', desc: 'El proceso de registrar y gestionar operaciones en tiempo real' },
-    post_trade:          { label: 'Post-Trade & Back Office', icon: '✅', desc: 'Lo que ocurre después de capturar el trade hasta su liquidación final' },
+    post_trade:          { label: 'Post-Trade & Back Office',     icon: '✅', desc: 'Lo que ocurre después de capturar el trade hasta su liquidación final' },
   };
+
+  /* Estado de colapso de módulos (persistido en localStorage) */
+  function getModuleCollapsed(key) {
+    return localStorage.getItem('dict_mod_' + key) === '1';
+  }
+  function setModuleCollapsed(key, collapsed) {
+    localStorage.setItem('dict_mod_' + key, collapsed ? '1' : '0');
+  }
 
   const data = await DataService.getDictionary();
   renderModules(data);
   Dictionary.init();
+
+  /* Scroll al módulo si hay anchor en la URL */
+  if (location.hash) {
+    const target = document.querySelector(location.hash);
+    if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
 
   /* ── Renderizado ─────────────────────────────────────────────────────────── */
   function renderModules(data, searchTerm = '', filterCat = 'all') {
@@ -163,8 +208,12 @@
       if (entries.length === 0) continue;
       totalVisible += entries.length;
 
+      const isCollapsed = q ? false : getModuleCollapsed(moduleKey);
+
       const section = document.createElement('section');
-      section.className = 'dict-module';
+      section.className = 'dict-module' + (isCollapsed ? ' collapsed' : '');
+      section.id = 'mod-' + moduleKey;
+
       section.innerHTML = `
         <div class="dict-module-header">
           <span class="dict-module-icon">${meta.icon}</span>
@@ -173,11 +222,28 @@
             <p class="dict-module-desc">${meta.desc}</p>
           </div>
           <span class="dict-module-count">${entries.length} término${entries.length !== 1 ? 's' : ''}</span>
+          <button class="dict-module-toggle" data-module="${moduleKey}" type="button"
+                  title="${isCollapsed ? 'Expandir' : 'Colapsar'}" aria-expanded="${!isCollapsed}">
+            ${isCollapsed ? '▸' : '▾'}
+          </button>
         </div>
-        <div class="dict-entries">
-          ${entries.map(([key, entry]) => renderEntry(key, entry)).join('')}
+        <div class="dict-module-entries">
+          <div class="dict-entries">
+            ${entries.map(([key, entry]) => renderEntry(key, entry)).join('')}
+          </div>
         </div>
       `;
+
+      section.querySelector('.dict-module-toggle').addEventListener('click', (e) => {
+        const key = e.currentTarget.dataset.module;
+        const collapsed = !section.classList.contains('collapsed');
+        section.classList.toggle('collapsed', collapsed);
+        e.currentTarget.textContent = collapsed ? '▸' : '▾';
+        e.currentTarget.title = collapsed ? 'Expandir' : 'Colapsar';
+        e.currentTarget.setAttribute('aria-expanded', String(!collapsed));
+        setModuleCollapsed(key, collapsed);
+      });
+
       container.appendChild(section);
     }
 
@@ -193,7 +259,6 @@
     const origen   = entry.origen
       ? `<div class="entry-detail"><span class="entry-detail-label">Origen</span><span>${entry.origen}</span></div>`
       : '';
-
     return `
       <div class="dict-entry" data-key="${key}" data-cat="${entry.categoria}">
         <div class="entry-header">
@@ -201,8 +266,7 @@
           <span class="tooltip-cat ${catClass}">${catLabel}</span>
         </div>
         <p class="entry-def">${entry.definicion}</p>
-        ${formula}
-        ${origen}
+        ${formula}${origen}
       </div>
     `;
   }
