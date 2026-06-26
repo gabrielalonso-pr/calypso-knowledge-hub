@@ -541,30 +541,6 @@
 
   <script src="js/xml-editor.js"></script>
   <script>
-    // Wire topbar visibility via MutationObserver on #editor-area
-    const _obs = new MutationObserver(() => {
-      const hidden = document.getElementById('editor-area').classList.contains('hidden');
-      document.getElementById('xe-topbar').classList.toggle('hidden', hidden);
-      document.getElementById('drop-wrapper').classList.toggle('hidden', !hidden);
-    });
-    _obs.observe(document.getElementById('editor-area'), { attributes: true, attributeFilter: ['class'] });
-
-    // Patch: after parse, update label
-    document.getElementById('file-input').addEventListener('change', () => {
-      setTimeout(() => {
-        if (tradeTag) document.getElementById('lbl-trade-tag').textContent = tradeTag;
-      }, 100);
-    });
-    document.getElementById('drop-zone').addEventListener('drop', () => {
-      setTimeout(() => {
-        if (tradeTag) document.getElementById('lbl-trade-tag').textContent = tradeTag;
-      }, 100);
-    });
-
-    document.getElementById('btn-change-file').addEventListener('click', () => {
-      // editor-area is hidden by js/xml-editor.js, observer handles the rest
-    }, { capture: true });
-
     // Sidebar toggle
     (function() {
       const sidebar      = document.getElementById('sidebar');
