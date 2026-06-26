@@ -26,6 +26,13 @@ Por eso:
   3. Etiquetado de cada concepto como "específico de Calypso" o "transferible a otras plataformas financieras"
   4. Generación asistida por IA de una ficha de configuración del producto simulado, por temas de tiempo, la ficha de configuración se generará de forma externa con IA y se subirá al repositorio.
 
+## Git y Pull Requests
+- Al completar una tarea o feature, haz commit y push automáticamente a la 
+  rama de la tarea sin pedirme confirmación para el push en sí.
+- NO hagas push directo a `main`; siempre a la rama de la tarea/sesión.
+- Yo reviso y apruebo manualmente el Pull Request en GitHub — no necesitas 
+  preguntarme antes de subir los commits, solo evita tocar `main`.
+
 ## Forma de trabajar
 - Antes de codear una feature, resume el plan en 3-4 líneas y espera mi aprobación
 - Una feature por sesión/commit

@@ -1,0 +1,86 @@
+{
+  "spot_rate": {
+    "termino": "Spot Rate",
+    "definicion": "Tipo de cambio vigente hoy para intercambiar dos divisas de forma inmediata (liquidación en T+2 en la mayoría de los mercados).",
+    "formula": "Precio de mercado: cuántas unidades de la moneda cotizada equivalen a 1 unidad de la moneda base.",
+    "origen": "Dato de mercado; se ingresa manualmente o se obtiene de un proveedor de precios (Bloomberg, Reuters).",
+    "categoria": "transferible"
+  },
+  "forward_rate": {
+    "termino": "Forward Rate",
+    "definicion": "Tipo de cambio pactado hoy para una transacción de divisas que se liquidará en una fecha futura determinada.",
+    "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
+    "origen": "Calculado a partir del Spot Rate y la diferencia de tasas de interés entre las dos monedas (Covered Interest Rate Parity).",
+    "categoria": "transferible"
+  },
+  "forward_points": {
+    "termino": "Forward Points",
+    "definicion": "Diferencia entre el Forward Rate y el Spot Rate. Refleja el diferencial de tasas de interés entre las dos monedas.",
+    "formula": "FP = F − S",
+    "origen": "Derivado directamente del Forward Rate calculado. Si las tasas de la moneda cotizada son mayores, los forward points son positivos.",
+    "categoria": "transferible"
+  },
+  "tasa_base": {
+    "termino": "Tasa de interés (moneda base)",
+    "definicion": "Tasa de interés anual de la moneda base (ej. USD). Representa el costo o rendimiento de invertir en esa moneda durante el plazo del contrato.",
+    "formula": "Se usa como r_b en la fórmula CIP.",
+    "origen": "Dato de mercado; típicamente corresponde a la tasa interbancaria o de referencia del banco central del país de la moneda base.",
+    "categoria": "transferible"
+  },
+  "tasa_cotizada": {
+    "termino": "Tasa de interés (moneda cotizada)",
+    "definicion": "Tasa de interés anual de la moneda cotizada (ej. MXN). Junto con la tasa base, determina el diferencial que define el Forward Rate.",
+    "formula": "Se usa como r_q en la fórmula CIP.",
+    "origen": "Dato de mercado; para MXN suele ser la TIIE. Para EUR, el EURIBOR. Etc.",
+    "categoria": "transferible"
+  },
+  "covered_interest_parity": {
+    "termino": "Covered Interest Rate Parity (CIP)",
+    "definicion": "Principio de no-arbitraje que establece que el Forward Rate debe reflejar exactamente el diferencial de tasas de interés entre dos países.",
+    "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
+    "origen": "Estándar de la industria financiera global. Documentado en Hull – Options, Futures & Other Derivatives y en el curriculum del CFA Institute.",
+    "categoria": "transferible"
+  },
+  "nocional": {
+    "termino": "Nocional (moneda base)",
+    "definicion": "Monto del contrato expresado en la moneda base. Es la cantidad de divisas que se intercambiará en la fecha de vencimiento.",
+    "formula": "Dato de entrada definido por las partes del contrato.",
+    "origen": "Acordado entre comprador y vendedor al momento de firmar el contrato forward.",
+    "categoria": "transferible"
+  },
+  "nocional_cotizada": {
+    "termino": "Nocional (moneda cotizada)",
+    "definicion": "Equivalente del nocional base en la moneda cotizada, calculado al Forward Rate. Es el monto que se pagará/recibirá en la otra moneda.",
+    "formula": "N_cotizada = N_base × F",
+    "origen": "Calculado multiplicando el nocional base por el Forward Rate pactado.",
+    "categoria": "transferible"
+  },
+  "dias_vencimiento": {
+    "termino": "Días al vencimiento",
+    "definicion": "Número de días calendario entre la fecha de trade y la fecha de valor (liquidación). Determina el plazo del contrato.",
+    "formula": "d = Fecha_valor − Fecha_trade (en días calendario)",
+    "origen": "Diferencia entre las fechas del contrato. Usado directamente en el denominador de la fórmula CIP.",
+    "categoria": "transferible"
+  },
+  "convencion_dias": {
+    "termino": "Convención de días (Day Count)",
+    "definicion": "Define cómo se cuentan los días para calcular el factor de interés. Las más comunes son ACT/360 (base 360 días) y ACT/365 (base 365 días).",
+    "formula": "Factor de interés = r × d / DC  (DC = 360 o 365)",
+    "origen": "Estándar de mercado. USD y MXN típicamente usan ACT/360. GBP y algunas divisas europeas usan ACT/365.",
+    "categoria": "transferible"
+  },
+  "npv": {
+    "termino": "NPV — Net Present Value",
+    "definicion": "Valor presente del contrato forward. Al inicio siempre es cero (precio justo). Cambia cuando el spot de mercado se mueve respecto al spot original del contrato.",
+    "formula": "NPV = N × [ S_mkt/(1+rb·t) − F_contract/(1+rq·t) ]",
+    "origen": "Valoración a mercado (Mark-to-Market). Mide cuánto ganaría o perdería si cerrara el contrato hoy al precio de mercado actual.",
+    "categoria": "transferible"
+  },
+  "spot_mercado": {
+    "termino": "Spot de mercado actual",
+    "definicion": "Tipo de cambio spot vigente en el momento de la valoración, que puede diferir del spot original del contrato. Se usa para calcular el NPV (MTM).",
+    "formula": "Dato de mercado al momento de la valoración.",
+    "origen": "Al inicio del contrato es igual al spot original → NPV = 0. Si el mercado se mueve, el NPV refleja la ganancia o pérdida flotante.",
+    "categoria": "transferible"
+  }
+}
