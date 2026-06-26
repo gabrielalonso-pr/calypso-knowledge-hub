@@ -6,112 +6,167 @@
   <title>Editor XML de Trades — Calypso Knowledge Hub</title>
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    /* ── Drop Zone ──────────────────────────────────────────────────── */
+    /* ── Page overrides: full-screen ──────────────────────────────────── */
+    body { overflow: hidden; }
+
+    .app-main {
+      max-width: 100%;
+      padding: 0;
+      height: calc(100vh - 56px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ──────────────────────────────────────────────────────── */
+    .xe-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1.25rem;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .xe-topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .xe-topbar-right { display: flex; align-items: center; gap: .5rem; }
+
+    .xe-page-title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .xe-filename-chip {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 999px;
+      padding: .2rem .75rem;
+      font-size: .8rem;
+      color: var(--gray-600);
+    }
+    .xe-filename-chip span { color: var(--gray-400); }
+
+    /* ── Drop zone ────────────────────────────────────────────────────── */
+    .xe-drop-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-50);
+    }
     .xe-drop-zone {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 1rem;
       border: 2px dashed var(--gray-300);
       border-radius: var(--radius-lg);
       background: var(--white);
-      padding: 4rem 2rem;
+      padding: 4rem 3rem;
       cursor: pointer;
       transition: border-color .2s, background .2s;
       text-align: center;
-      max-width: 600px;
-      margin: 3rem auto;
+      max-width: 500px;
+      width: 90%;
     }
     .xe-drop-zone:hover, .xe-drop-zone.xe-drag-over {
       border-color: var(--blue-600);
       background: var(--blue-50);
     }
-    .xe-drop-icon { font-size: 3rem; line-height: 1; }
-    .xe-drop-title { font-size: 1.1rem; font-weight: 700; color: var(--gray-900); }
-    .xe-drop-sub { font-size: .85rem; color: var(--gray-500); }
-    .xe-drop-btn {
+    .xe-drop-icon  { font-size: 2.5rem; line-height: 1; }
+    .xe-drop-title { font-size: 1.05rem; font-weight: 700; color: var(--gray-900); }
+    .xe-drop-sub   { font-size: .83rem; color: var(--gray-500); }
+    .xe-drop-cta {
       background: var(--blue-600);
       color: var(--white);
       border: none;
       border-radius: var(--radius);
-      padding: .55rem 1.4rem;
-      font-size: .9rem;
+      padding: .5rem 1.4rem;
+      font-size: .88rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s;
       pointer-events: none;
     }
-    .xe-drop-zone:hover .xe-drop-btn { background: var(--blue-700); }
 
-    /* ── Editor layout ──────────────────────────────────────────────── */
-    .xe-editor-layout {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 1.25rem;
-      align-items: start;
-    }
-    @media (max-width: 900px) { .xe-editor-layout { grid-template-columns: 1fr; } }
-
-    /* ── Editor header bar ──────────────────────────────────────────── */
-    .xe-editor-topbar {
+    /* ── Editor area ──────────────────────────────────────────────────── */
+    #editor-area {
+      flex: 1;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: .75rem;
-      margin-bottom: 1rem;
+      overflow: hidden;
     }
-    .xe-filename {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .9rem;
-      font-weight: 600;
-      color: var(--gray-700);
-    }
-    .xe-filename-icon { color: var(--blue-600); }
-    .xe-topbar-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
-    /* ── Form panel ─────────────────────────────────────────────────── */
-    .xe-form-panel {
+    /* ── Form column ──────────────────────────────────────────────────── */
+    .xe-form-col {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--gray-50);
+      padding: 1rem 1.25rem;
+    }
+
+    .xe-form-card {
       background: var(--white);
       border: 1px solid var(--gray-200);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-    .xe-form-panel-head {
+    .xe-form-card-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: .85rem 1.1rem;
-      border-bottom: 1px solid var(--gray-200);
-      background: var(--gray-50);
+      padding: .7rem 1rem;
+      background: var(--gray-900);
+      color: var(--white);
     }
-    .xe-form-panel-head h2 { font-size: .95rem; font-weight: 700; color: var(--gray-900); }
-    #trade-form { padding: .5rem 0; }
-
-    /* ── Field rows ─────────────────────────────────────────────────── */
-    .xe-field-row {
+    .xe-form-card-head h2 {
+      font-size: .88rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
+      gap: .5rem;
+    }
+    .xe-trade-tag {
+      background: var(--blue-600);
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: .1rem .5rem;
+      font-size: .75rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── Field groups ─────────────────────────────────────────────────── */
+    #trade-form { padding: .25rem 0; }
+
+    .xe-field-group { border-bottom: 1px solid var(--gray-100); }
+    .xe-field-group:last-child { border-bottom: none; }
+
+    /* simple field row */
+    .xe-field-unit {
+      display: flex;
+      align-items: flex-start;
       gap: .75rem;
-      padding: .45rem 1.1rem;
-      border-bottom: 1px solid var(--gray-100);
+      padding: .4rem 1rem;
       transition: background .1s;
     }
-    .xe-field-row:hover { background: var(--gray-50); }
-    .xe-field-row label {
-      flex: 0 0 200px;
-      font-size: .82rem;
+    .xe-field-unit:hover { background: var(--gray-50); }
+
+    .xe-field-label {
+      flex: 0 0 210px;
+      font-size: .8rem;
       font-weight: 500;
-      color: var(--gray-700);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      color: var(--gray-600);
+      padding-top: .45rem;
+      font-family: 'Courier New', monospace;
     }
-    .xe-field-row input {
+
+    .xe-values-list { flex: 1; display: flex; flex-direction: column; gap: .25rem; }
+
+    .xe-value-row { display: flex; align-items: center; gap: .3rem; }
+
+    .xe-value-input {
       flex: 1;
       height: 32px;
       padding: 0 .6rem;
@@ -122,205 +177,228 @@
       background: var(--white);
       transition: border-color .15s, box-shadow .15s;
     }
-    .xe-field-row input:focus {
+    .xe-value-input:focus {
       outline: none;
       border-color: var(--blue-600);
       box-shadow: 0 0 0 2px var(--blue-100);
     }
-    .xe-field-row input::placeholder { color: var(--gray-300); font-style: italic; }
+    .xe-value-input::placeholder { color: var(--gray-300); font-style: italic; }
 
-    /* ── Group sections ─────────────────────────────────────────────── */
-    .xe-group {
-      margin: .4rem .75rem;
-      border: 1px solid var(--gray-200);
+    .xe-val-btn {
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
       border-radius: var(--radius);
-      overflow: hidden;
+      border: 1px solid var(--gray-200);
+      background: none;
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1;
+      transition: all .15s;
     }
+    .xe-val-add { color: var(--blue-600); }
+    .xe-val-add:hover { background: var(--blue-50); border-color: var(--blue-600); }
+    .xe-val-del { color: var(--red-600); }
+    .xe-val-del:hover { background: var(--red-50); border-color: var(--red-600); }
+
+    /* ── Group instances ──────────────────────────────────────────────── */
+    .xe-group-instance { margin: .35rem .75rem; border-radius: var(--radius); overflow: hidden; }
+
+    /* depth 0 */
+    .xe-group-instance--d0 { border: 1px solid #bfdbfe; }
+    .xe-group-header--d0   { background: #1e40af; color: var(--white); }
+    .xe-group-header--d0 .xe-group-title { color: var(--white); }
+
+    /* depth 1 */
+    .xe-group-instance--d1 { border: 1px solid var(--gray-300); }
+    .xe-group-header--d1   { background: var(--gray-700); color: var(--white); }
+    .xe-group-header--d1 .xe-group-title { color: var(--white); }
+
+    /* depth 2+ */
+    .xe-group-instance--d2 { border: 1px solid var(--gray-200); }
+    .xe-group-header--d2   { background: var(--gray-100); color: var(--gray-800); }
+
     .xe-group-header {
-      width: 100%;
       display: flex;
       align-items: center;
-      gap: .5rem;
-      padding: .55rem .85rem;
-      background: var(--blue-50);
-      border: none;
-      border-bottom: 1px solid var(--gray-200);
+      justify-content: space-between;
+      padding: .45rem .75rem;
+    }
+    .xe-group-header-left  { display: flex; align-items: center; gap: .4rem; }
+    .xe-group-header-right { display: flex; align-items: center; gap: .4rem; }
+
+    .xe-group-title { font-size: .82rem; font-weight: 700; font-family: 'Courier New', monospace; }
+
+    .xe-collapse-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: .7rem; padding: .1rem .2rem;
+      opacity: .75; transition: opacity .15s;
+    }
+    .xe-collapse-btn:hover { opacity: 1; }
+    .xe-group-header--d0 .xe-collapse-btn,
+    .xe-group-header--d1 .xe-collapse-btn { color: rgba(255,255,255,.8); }
+    .xe-group-header--d2 .xe-collapse-btn { color: var(--gray-500); }
+
+    .xe-dup-btn {
+      font-size: .72rem; font-weight: 600;
+      padding: .15rem .5rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.1);
       cursor: pointer;
-      font-size: .82rem;
-      font-weight: 700;
-      color: var(--blue-700);
-      text-align: left;
+      color: inherit;
       transition: background .15s;
     }
-    .xe-group-header:hover { background: var(--blue-100); }
-    .xe-group-arrow { font-size: .75rem; transition: transform .15s; }
-    .xe-group-body { padding: .25rem 0; }
-    .xe-group-body.xe-collapsed { display: none; }
-    .xe-group-body .xe-field-row { padding-left: 1rem; }
-
-    /* ── Sidebar ────────────────────────────────────────────────────── */
-    .xe-sidebar { display: flex; flex-direction: column; gap: 1rem; }
-    .xe-sidebar-panel {
+    .xe-dup-btn:hover { background: rgba(255,255,255,.25); }
+    .xe-group-header--d2 .xe-dup-btn {
+      border-color: var(--gray-300);
       background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      color: var(--gray-600);
+    }
+    .xe-group-header--d2 .xe-dup-btn:hover { background: var(--gray-50); }
+
+    .xe-del-instance-btn {
+      font-size: .72rem; font-weight: 700;
+      padding: .15rem .45rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(220,38,38,.25);
+      color: #fca5a5;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .xe-del-instance-btn:hover { background: rgba(220,38,38,.5); color: var(--white); }
+    .xe-group-header--d2 .xe-del-instance-btn {
+      background: var(--red-50); color: var(--red-600);
+      border-color: var(--red-600);
+    }
+
+    .xe-group-body { background: var(--white); }
+    .xe-group-body .xe-field-unit { padding-left: 1rem; }
+    .xe-group-body.xe-collapsed { display: none; }
+
+    /* ── Sidebar ──────────────────────────────────────────────────────── */
+    .xe-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--gray-200);
+      background: var(--white);
       overflow: hidden;
     }
+
+    .xe-sidebar-section {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .xe-sidebar-section:last-child { border-bottom: none; flex: 1; overflow: hidden; }
+
     .xe-sidebar-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: .75rem 1rem;
-      border-bottom: 1px solid var(--gray-200);
+      padding: .6rem .9rem;
       background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
     }
-    .xe-sidebar-head h3 { font-size: .85rem; font-weight: 700; color: var(--gray-900); }
+    .xe-sidebar-head h3 { font-size: .82rem; font-weight: 700; color: var(--gray-700); }
+
     .xe-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 .4rem;
+      min-width: 20px; height: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 .35rem;
       background: var(--blue-600);
       color: var(--white);
       border-radius: 999px;
-      font-size: .75rem;
-      font-weight: 700;
+      font-size: .72rem; font-weight: 700;
       transition: transform .2s;
     }
-    .xe-badge-flash { transform: scale(1.4); }
+    .xe-badge-flash { transform: scale(1.45); }
+
+    .xe-action-group { padding: .6rem; display: flex; flex-direction: column; gap: .4rem; }
+
+    .xe-action-btn {
+      display: block; width: 100%;
+      padding: .55rem .9rem;
+      border: none; border-radius: var(--radius);
+      font-size: .85rem; font-weight: 600;
+      cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .xe-btn-add    { background: var(--gray-900); color: var(--white); }
+    .xe-btn-add:hover { background: var(--gray-700); }
+    .xe-btn-export { background: var(--blue-600); color: var(--white); }
+    .xe-btn-export:hover { background: var(--blue-700); }
+    .xe-btn-clear  { background: none; border: 1px solid var(--gray-300); color: var(--gray-600); }
+    .xe-btn-clear:hover { background: var(--gray-100); }
 
     #records-list {
       list-style: none;
-      padding: .5rem 0;
-      max-height: 300px;
       overflow-y: auto;
+      flex: 1;
+      padding: .35rem 0;
     }
-    .xe-no-records {
-      padding: .75rem 1rem;
-      font-size: .82rem;
-      color: var(--gray-500);
-      font-style: italic;
-    }
+    .xe-no-records { padding: .75rem .9rem; font-size: .8rem; color: var(--gray-400); font-style: italic; }
+
     .xe-record-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: .5rem 1rem;
-      border-bottom: 1px solid var(--gray-100);
-      gap: .5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .45rem .9rem; border-bottom: 1px solid var(--gray-100); gap: .5rem;
     }
-    .xe-record-label {
-      font-size: .8rem;
-      color: var(--gray-700);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .xe-record-actions { display: flex; gap: .3rem; flex-shrink: 0; }
+    .xe-record-label { font-size: .78rem; color: var(--gray-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .xe-record-actions { display: flex; gap: .25rem; flex-shrink: 0; }
     .xe-rec-btn {
-      background: none;
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius);
-      padding: .15rem .45rem;
-      font-size: .78rem;
-      cursor: pointer;
-      color: var(--gray-500);
-      transition: all .15s;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); cursor: pointer; font-size: .75rem;
+      color: var(--gray-500); transition: all .15s;
     }
     .xe-rec-load:hover { background: var(--blue-50); border-color: var(--blue-600); color: var(--blue-700); }
     .xe-rec-del:hover  { background: var(--red-50);  border-color: var(--red-600);  color: var(--red-600); }
 
-    /* ── Action buttons ─────────────────────────────────────────────── */
-    .xe-action-btn {
-      display: block;
-      width: calc(100% - 2rem);
-      margin: .4rem 1rem;
-      padding: .6rem 1rem;
-      border: none;
-      border-radius: var(--radius);
-      font-size: .88rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .xe-btn-add {
-      background: var(--gray-900);
-      color: var(--white);
-    }
-    .xe-btn-add:hover { background: var(--gray-700); }
-    .xe-btn-export {
-      background: var(--blue-600);
-      color: var(--white);
-    }
-    .xe-btn-export:hover { background: var(--blue-700); }
-    .xe-btn-clear {
-      background: none;
-      border: 1px solid var(--gray-300);
-      color: var(--gray-600);
-    }
-    .xe-btn-clear:hover { background: var(--gray-100); border-color: var(--gray-400); }
-
-    /* ── Modal ──────────────────────────────────────────────────────── */
+    /* ── Modal ────────────────────────────────────────────────────────── */
     .xe-modal-overlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0,0,0,.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       z-index: 300;
     }
     .xe-modal-overlay.hidden { display: none; }
     .xe-modal-box {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 8px 32px rgba(0,0,0,.18);
-      padding: 1.75rem;
-      max-width: 420px;
-      width: 90%;
+      background: var(--white); border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+      padding: 1.75rem; max-width: 420px; width: 90%;
     }
     .xe-modal-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--gray-900);
-      margin-bottom: .85rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
+      font-size: .95rem; font-weight: 700; color: var(--gray-900);
+      margin-bottom: .85rem; display: flex; align-items: center; gap: .45rem;
     }
-    .xe-modal-body {
-      font-size: .88rem;
-      color: var(--gray-700);
-      line-height: 1.6;
-      margin-bottom: 1.25rem;
-    }
-    .xe-modal-warn { color: var(--amber-500); font-weight: 700; }
+    .xe-modal-body  { font-size: .88rem; color: var(--gray-700); line-height: 1.6; margin-bottom: 1.2rem; }
+    .xe-modal-warn  { color: var(--amber-500); font-weight: 700; }
     .xe-modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
 
-    /* ── Error banner ───────────────────────────────────────────────── */
+    /* ── Error banner ─────────────────────────────────────────────────── */
     #error-banner {
-      position: fixed;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--red-50);
-      border: 1px solid var(--red-600);
-      color: var(--red-600);
-      border-radius: var(--radius);
-      padding: .6rem 1.25rem;
-      font-size: .88rem;
-      font-weight: 600;
-      z-index: 400;
-      box-shadow: var(--shadow);
-      max-width: 520px;
-      text-align: center;
+      position: fixed; top: 65px; left: 50%; transform: translateX(-50%);
+      background: var(--red-50); border: 1px solid var(--red-600); color: var(--red-600);
+      border-radius: var(--radius); padding: .55rem 1.25rem;
+      font-size: .85rem; font-weight: 600; z-index: 400;
+      box-shadow: var(--shadow); max-width: 520px; text-align: center;
     }
-    #error-banner.hidden { display: none; }
 
     .hidden { display: none !important; }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      body { overflow: auto; }
+      .app-main { height: auto; }
+      #editor-area { flex-direction: column; overflow: visible; }
+      .xe-form-col { overflow: visible; }
+      .xe-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--gray-200); }
+    }
   </style>
 </head>
 <body>
@@ -331,7 +409,7 @@
         <span class="logo-mark">◈</span>
         <span class="logo-name">Calypso <strong>Knowledge Hub</strong></span>
       </div>
-      <nav class="product-nav" aria-label="Navegación">
+      <nav class="product-nav">
         <a href="index.html"><button class="product-btn" type="button">Forward FX</button></a>
         <button class="product-btn active" type="button">Editor XML</button>
       </nav>
@@ -340,109 +418,121 @@
 
   <main class="app-main">
 
-    <div class="product-intro">
-      <div>
-        <h1>Editor XML de Trades</h1>
-        <p class="product-desc">
-          Sube un XML de trade de Calypso, modifica los valores y exporta un archivo
-          CDUF con uno o múltiples registros.
-        </p>
-      </div>
-      <div class="tag-group">
-        <span class="tag tag--calypso">Calypso</span>
-      </div>
-    </div>
-
     <!-- Error banner -->
     <div id="error-banner" class="hidden" role="alert"></div>
 
-    <!-- ── Drop zone ──────────────────────────────────────────────── -->
-    <div id="drop-zone" class="xe-drop-zone" role="button" tabindex="0"
-         aria-label="Subir archivo XML">
-      <div class="xe-drop-icon">📄</div>
-      <div class="xe-drop-title">Arrastra tu archivo XML aquí</div>
-      <div class="xe-drop-sub">o haz clic para seleccionarlo desde tu equipo</div>
-      <span class="xe-drop-btn">Seleccionar archivo</span>
-      <input id="file-input" type="file" accept=".xml" style="display:none">
-    </div>
-
-    <!-- ── Editor area ─────────────────────────────────────────────── -->
-    <div id="editor-area" class="hidden">
-
-      <div class="xe-editor-topbar">
-        <div class="xe-filename">
-          <span class="xe-filename-icon">📄</span>
+    <!-- ── Top bar (shown when file loaded) ─────────────────────────── -->
+    <div class="xe-topbar hidden" id="xe-topbar">
+      <div class="xe-topbar-left">
+        <span class="xe-page-title">Editor XML</span>
+        <div class="xe-filename-chip">
+          <span>📄</span>
           <span id="editor-filename">archivo.xml</span>
         </div>
-        <div class="xe-topbar-actions">
-          <button id="btn-change-file" class="btn-ghost" type="button">↩ Cargar otro archivo</button>
-        </div>
       </div>
+      <div class="xe-topbar-right">
+        <button id="btn-change-file" class="btn-ghost" type="button">↩ Cargar otro</button>
+      </div>
+    </div>
 
-      <div class="xe-editor-layout">
+    <!-- ── Drop zone ────────────────────────────────────────────────── -->
+    <div class="xe-drop-wrapper" id="drop-wrapper">
+      <div id="drop-zone" class="xe-drop-zone" role="button" tabindex="0">
+        <div class="xe-drop-icon">📄</div>
+        <div class="xe-drop-title">Arrastra tu XML de trade aquí</div>
+        <div class="xe-drop-sub">o haz clic para seleccionarlo desde tu equipo</div>
+        <span class="xe-drop-cta">Seleccionar archivo</span>
+        <input id="file-input" type="file" accept=".xml" style="display:none">
+      </div>
+    </div>
 
-        <!-- Formulario -->
-        <div class="xe-form-panel">
-          <div class="xe-form-panel-head">
-            <h2>Datos del trade</h2>
-            <button id="btn-clear" class="btn-ghost xe-btn-clear" type="button">✕ Limpiar valores</button>
+    <!-- ── Editor ───────────────────────────────────────────────────── -->
+    <div id="editor-area" class="hidden">
+
+      <!-- Form column -->
+      <div class="xe-form-col">
+        <div class="xe-form-card">
+          <div class="xe-form-card-head">
+            <h2>
+              <span class="xe-trade-tag" id="lbl-trade-tag">CalypsoTrade</span>
+              datos del trade
+            </h2>
           </div>
           <form id="trade-form" autocomplete="off"></form>
         </div>
-
-        <!-- Sidebar -->
-        <aside class="xe-sidebar">
-
-          <!-- Acciones -->
-          <div class="xe-sidebar-panel">
-            <div class="xe-sidebar-head">
-              <h3>Acciones</h3>
-            </div>
-            <div style="padding: .75rem 0;">
-              <button id="btn-add-record" class="xe-action-btn xe-btn-add" type="button">
-                + Agregar registro
-              </button>
-              <button id="btn-export" class="xe-action-btn xe-btn-export" type="button">
-                ⬇ Exportar CDUF
-              </button>
-            </div>
-          </div>
-
-          <!-- Registros guardados -->
-          <div class="xe-sidebar-panel">
-            <div class="xe-sidebar-head">
-              <h3>Registros guardados</h3>
-              <span class="xe-badge" id="records-count">0</span>
-            </div>
-            <ul id="records-list">
-              <li class="xe-no-records">Ningún registro guardado aún.</li>
-            </ul>
-          </div>
-
-        </aside>
       </div>
+
+      <!-- Sidebar -->
+      <aside class="xe-sidebar">
+
+        <div class="xe-sidebar-section">
+          <div class="xe-sidebar-head"><h3>Acciones</h3></div>
+          <div class="xe-action-group">
+            <button id="btn-add-record" class="xe-action-btn xe-btn-add" type="button">+ Agregar registro</button>
+            <button id="btn-export"     class="xe-action-btn xe-btn-export" type="button">⬇ Exportar CDUF</button>
+            <button id="btn-clear"      class="xe-action-btn xe-btn-clear" type="button">✕ Limpiar valores</button>
+          </div>
+        </div>
+
+        <div class="xe-sidebar-section">
+          <div class="xe-sidebar-head">
+            <h3>Registros guardados</h3>
+            <span class="xe-badge" id="records-count">0</span>
+          </div>
+          <ul id="records-list">
+            <li class="xe-no-records">Ningún registro guardado aún.</li>
+          </ul>
+        </div>
+
+      </aside>
     </div>
 
   </main>
 
-  <!-- ── Modal de confirmación de exportación ──────────────────────── -->
-  <div id="export-modal" class="xe-modal-overlay hidden" role="dialog"
-       aria-modal="true" aria-labelledby="modal-title">
+  <!-- ── Modal ──────────────────────────────────────────────────────── -->
+  <div id="export-modal" class="xe-modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="xe-modal-box">
-      <div class="xe-modal-title" id="modal-title">
-        <span>📤</span> Confirmar exportación
-      </div>
+      <div class="xe-modal-title">📤 Confirmar exportación</div>
       <div class="xe-modal-body" id="modal-message"></div>
       <div class="xe-modal-actions">
-        <button id="modal-cancel" class="btn-ghost" type="button">Cancelar</button>
+        <button id="modal-cancel"  class="btn-ghost" type="button">Cancelar</button>
         <button id="modal-confirm" class="xe-action-btn xe-btn-export"
-                style="width:auto;margin:0;padding:.5rem 1.25rem;" type="button">
-          Exportar XML
-        </button>
+                style="width:auto;padding:.45rem 1.2rem;" type="button">Exportar XML</button>
       </div>
     </div>
   </div>
 
   <script src="js/xml-editor.js"></script>
+  <script>
+    // Show topbar and hide drop-wrapper when file loads
+    const _origLoad = loadFile;
+    document.getElementById('file-input').addEventListener('change', () => {});
+    // Wire topbar visibility via MutationObserver on #editor-area
+    const _obs = new MutationObserver(() => {
+      const hidden = document.getElementById('editor-area').classList.contains('hidden');
+      document.getElementById('xe-topbar').classList.toggle('hidden', hidden);
+      document.getElementById('drop-wrapper').classList.toggle('hidden', !hidden);
+    });
+    _obs.observe(document.getElementById('editor-area'), { attributes: true, attributeFilter: ['class'] });
+
+    // Update trade tag label
+    const _origParse = parseXML;
+    // Patch: after parse, update label
+    document.getElementById('file-input').addEventListener('change', () => {
+      setTimeout(() => {
+        if (tradeTag) document.getElementById('lbl-trade-tag').textContent = tradeTag;
+      }, 100);
+    });
+    document.getElementById('drop-zone').addEventListener('drop', () => {
+      setTimeout(() => {
+        if (tradeTag) document.getElementById('lbl-trade-tag').textContent = tradeTag;
+      }, 100);
+    });
+
+    // Change file also hides topbar
+    document.getElementById('btn-change-file').addEventListener('click', () => {
+      // editor-area is hidden by js/xml-editor.js, observer handles the rest
+    }, { capture: true });
+  </script>
 </body>
 </html>
