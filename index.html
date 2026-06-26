@@ -3,23 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calypso Knowledge Hub — Forward FX</title>
+  <title>Forward FX — Calypso Knowledge Hub</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="has-sidebar">
 
-<!-- ══════════════════════════════ HEADER ════════════════════════════════ -->
-<header class="app-header">
-  <div class="header-inner">
+<div class="layout">
+
+<!-- ══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
     <div class="logo">
       <span class="logo-mark">◈</span>
-      <span class="logo-name">Calypso <strong>Knowledge Hub</strong></span>
+      <span class="logo-name">Calypso <strong>Hub</strong></span>
     </div>
-    <nav class="product-nav">
-      <button class="product-btn active" data-product="forward-fx" type="button">Forward FX</button>
-      <a href="xml-editor.html"><button class="product-btn" type="button">Editor XML</button></a>
-    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Colapsar menú" aria-label="Colapsar menú">‹</button>
   </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-section-label">Knowledge</span>
+      <a href="dictionary.html" class="nav-item">
+        <span class="nav-icon">📖</span>
+        <span class="nav-label">Diccionario Calypso</span>
+      </a>
+      <a href="glossary.html" class="nav-item">
+        <span class="nav-icon">✏️</span>
+        <span class="nav-label">Mi Glosario</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-label">Products</span>
+      <a href="index.html" class="nav-item active">
+        <span class="nav-icon">↔</span>
+        <span class="nav-label">Forward FX</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-label">Tools</span>
+      <a href="xml-editor.html" class="nav-item">
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">Editor XML</span>
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
+<div class="page-wrap">
+
+<header class="page-header">
+  <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
+  <h1 class="page-title">Forward FX</h1>
+  <p class="page-subtitle">Simulador interactivo · Covered Interest Rate Parity (CIP)</p>
 </header>
 
 <main class="app-main">
@@ -27,7 +63,6 @@
   <!-- Product bar -->
   <div class="product-bar">
     <div class="product-bar-info">
-      <h1 class="product-title">Forward FX</h1>
       <p class="product-desc">
         Compraventa de divisas a precio fijado hoy para liquidación futura ·
         <strong>Covered Interest Rate Parity (CIP)</strong>
@@ -274,6 +309,8 @@
   </div>
 
 </main>
+</div><!-- /page-wrap -->
+</div><!-- /layout -->
 
 <!-- ════════════════════════ TOOLTIP DICCIONARIO ══════════════════════ -->
 <div id="dict-tooltip" class="dict-tooltip hidden" role="tooltip" aria-hidden="true">
@@ -293,9 +330,27 @@
   </div>
 </div>
 
+<script src="js/data-service.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/dictionary.js"></script>
 <script src="js/loader.js"></script>
 <script src="js/ui.js"></script>
+<script>
+  /* Sidebar toggle para index.html */
+  (function() {
+    const sidebar      = document.getElementById('sidebar');
+    const toggleBtn    = document.getElementById('sidebar-toggle');
+    const headerToggle = document.getElementById('header-toggle');
+    function setSidebarCollapsed(c) {
+      sidebar.classList.toggle('sidebar--collapsed', c);
+      toggleBtn.textContent = c ? '›' : '‹';
+      toggleBtn.title = c ? 'Expandir menú' : 'Colapsar menú';
+      localStorage.setItem('sidebar_collapsed', c ? '1' : '0');
+    }
+    setSidebarCollapsed(localStorage.getItem('sidebar_collapsed') === '1');
+    toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+    headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  })();
+</script>
 </body>
 </html>

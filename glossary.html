@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Glosario — Calypso Knowledge Hub</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="has-sidebar">
+
+<div class="layout">
+
+  <!-- ══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        <span class="logo-name">Calypso <strong>Hub</strong></span>
+      </div>
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Colapsar menú" aria-label="Colapsar menú">‹</button>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <div class="nav-section">
+        <span class="nav-section-label">Knowledge</span>
+        <a href="dictionary.html" class="nav-item">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">Diccionario Calypso</span>
+        </a>
+        <a href="glossary.html" class="nav-item active">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label">Mi Glosario</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Products</span>
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">↔</span>
+          <span class="nav-label">Forward FX</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Tools</span>
+        <a href="xml-editor.html" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Editor XML</span>
+        </a>
+      </div>
+
+    </nav>
+  </aside>
+
+  <!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
+  <div class="page-wrap">
+
+    <header class="page-header">
+      <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
+      <h1 class="page-title">Mi Glosario</h1>
+      <p class="page-subtitle">Tus propios términos y notas · Se guardan localmente (localStorage → futura DB)</p>
+    </header>
+
+    <main class="page-main">
+
+      <!-- Toolbar -->
+      <div class="glos-toolbar">
+        <input type="search" id="glos-search" class="dict-search" placeholder="Buscar en mi glosario..." autocomplete="off" style="flex:1; max-width:340px;">
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          <button id="btn-new-entry" class="btn-primary" type="button">+ Nuevo término</button>
+          <button id="btn-export" class="btn-ghost" type="button">Exportar JSON</button>
+        </div>
+      </div>
+
+      <!-- Lista de entradas -->
+      <div id="glos-list"></div>
+      <p id="glos-empty" class="dict-empty hidden">Aún no tienes términos guardados. Agrega el primero con el botón de arriba.</p>
+
+      <!-- Formulario (modal inline) -->
+      <div id="glos-modal" class="glos-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="glos-modal-box">
+          <div class="glos-modal-header">
+            <h2 class="glos-modal-title" id="modal-title">Nuevo término</h2>
+            <button id="btn-modal-close" class="tooltip-close" type="button" aria-label="Cerrar">✕</button>
+          </div>
+
+          <form id="glos-form" novalidate>
+            <input type="hidden" id="f-id">
+
+            <div class="form-field">
+              <label class="form-label" for="f-termino">Término <span class="form-required">*</span></label>
+              <input type="text" id="f-termino" class="form-input" placeholder="ej. Greeks, VaR, CCP..." required>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="f-definicion">Definición <span class="form-required">*</span></label>
+              <textarea id="f-definicion" class="form-textarea" rows="3"
+                        placeholder="Explica el concepto con tus propias palabras..." required></textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="f-formula">Fórmula <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="f-formula" class="form-input" placeholder="ej. Delta = ∂V/∂S">
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="f-origen">Origen / Fuente <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="f-origen" class="form-input" placeholder="ej. Hull Cap. 5, curso Calypso 102...">
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="f-categoria">Categoría</label>
+              <select id="f-categoria" class="form-select">
+                <option value="personal">Personal</option>
+                <option value="transferible">Transferible</option>
+                <option value="especifico_calypso">Específico Calypso</option>
+              </select>
+            </div>
+
+            <p class="form-error hidden" id="form-error">Completa los campos requeridos.</p>
+
+            <div class="form-actions">
+              <button type="button" id="btn-cancel" class="btn-ghost">Cancelar</button>
+              <button type="submit" class="btn-primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════ TOOLTIP DICCIONARIO (reutilizado) ════════════════════ -->
+<div id="dict-tooltip" class="dict-tooltip hidden" role="tooltip" aria-hidden="true">
+  <button class="tooltip-close" id="tooltip-close" type="button" aria-label="Cerrar">✕</button>
+  <div class="tooltip-term-row">
+    <span class="tooltip-term" id="tt-term"></span>
+    <span class="tooltip-cat"  id="tt-cat"></span>
+  </div>
+  <p class="tooltip-def" id="tt-def"></p>
+  <div class="tooltip-detail" id="tt-formula-row">
+    <span class="tooltip-detail-label">Fórmula:</span>
+    <code id="tt-formula"></code>
+  </div>
+  <div class="tooltip-detail" id="tt-origin-row">
+    <span class="tooltip-detail-label">Origen:</span>
+    <span id="tt-origin"></span>
+  </div>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/dictionary.js"></script>
+<script>
+(async () => {
+  /* ── Sidebar toggle ─────────────────────────────────────────────────────── */
+  const sidebar      = document.getElementById('sidebar');
+  const toggleBtn    = document.getElementById('sidebar-toggle');
+  const headerToggle = document.getElementById('header-toggle');
+
+  function setSidebarCollapsed(collapsed) {
+    sidebar.classList.toggle('sidebar--collapsed', collapsed);
+    toggleBtn.textContent = collapsed ? '›' : '‹';
+    toggleBtn.title = collapsed ? 'Expandir menú' : 'Colapsar menú';
+    localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+  }
+
+  setSidebarCollapsed(localStorage.getItem('sidebar_collapsed') === '1');
+  toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+
+  /* ── Estado ─────────────────────────────────────────────────────────────── */
+  let entries     = await DataService.getGlossary();
+  let editingId   = null;
+  let searchQuery = '';
+
+  /* ── Render lista ───────────────────────────────────────────────────────── */
+  function renderList() {
+    const list      = document.getElementById('glos-list');
+    const emptyMsg  = document.getElementById('glos-empty');
+    const q = searchQuery.toLowerCase();
+
+    const filtered = entries.filter(e =>
+      !q || e.termino.toLowerCase().includes(q) || e.definicion.toLowerCase().includes(q)
+    );
+
+    list.innerHTML = '';
+
+    if (filtered.length === 0) {
+      emptyMsg.classList.remove('hidden');
+      return;
+    }
+    emptyMsg.classList.add('hidden');
+
+    filtered.forEach(entry => {
+      const catLabel = { transferible: 'Transferible', especifico_calypso: 'Específico Calypso', personal: 'Personal' }[entry.categoria] || entry.categoria;
+      const catClass = 'tooltip-cat--' + (entry.categoria === 'personal' ? 'personal' : entry.categoria);
+      const formula  = entry.formula ? `<div class="entry-detail"><span class="entry-detail-label">Fórmula</span><code>${entry.formula}</code></div>` : '';
+      const origen   = entry.origen  ? `<div class="entry-detail"><span class="entry-detail-label">Origen</span><span>${entry.origen}</span></div>` : '';
+      const date     = new Date(entry.updatedAt).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+
+      const card = document.createElement('div');
+      card.className = 'dict-entry glos-card';
+      card.dataset.id = entry.id;
+      card.innerHTML = `
+        <div class="entry-header">
+          <span class="entry-term">${entry.termino}</span>
+          <div style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
+            <span class="tooltip-cat ${catClass}">${catLabel}</span>
+            <span class="glos-date">${date}</span>
+            <button class="glos-action-btn" data-action="edit" data-id="${entry.id}" type="button" title="Editar">✏</button>
+            <button class="glos-action-btn glos-action-btn--delete" data-action="delete" data-id="${entry.id}" type="button" title="Eliminar">✕</button>
+          </div>
+        </div>
+        <p class="entry-def">${entry.definicion}</p>
+        ${formula}
+        ${origen}
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  /* ── Modal ──────────────────────────────────────────────────────────────── */
+  const modal     = document.getElementById('glos-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const form      = document.getElementById('glos-form');
+
+  function openModal(entry = null) {
+    editingId = entry ? entry.id : null;
+    modalTitle.textContent = entry ? 'Editar término' : 'Nuevo término';
+    document.getElementById('f-id').value         = entry ? entry.id : '';
+    document.getElementById('f-termino').value    = entry ? entry.termino    : '';
+    document.getElementById('f-definicion').value = entry ? entry.definicion : '';
+    document.getElementById('f-formula').value    = entry ? entry.formula    : '';
+    document.getElementById('f-origen').value     = entry ? entry.origen     : '';
+    document.getElementById('f-categoria').value  = entry ? entry.categoria  : 'personal';
+    document.getElementById('form-error').classList.add('hidden');
+    modal.classList.remove('hidden');
+    document.getElementById('f-termino').focus();
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    editingId = null;
+    form.reset();
+  }
+
+  document.getElementById('btn-new-entry').addEventListener('click',  () => openModal());
+  document.getElementById('btn-modal-close').addEventListener('click', closeModal);
+  document.getElementById('btn-cancel').addEventListener('click',      closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  /* ── Submit formulario ──────────────────────────────────────────────────── */
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const termino    = document.getElementById('f-termino').value.trim();
+    const definicion = document.getElementById('f-definicion').value.trim();
+
+    if (!termino || !definicion) {
+      document.getElementById('form-error').classList.remove('hidden');
+      return;
+    }
+
+    const payload = {
+      id:         editingId || undefined,
+      termino,
+      definicion,
+      formula:    document.getElementById('f-formula').value.trim(),
+      origen:     document.getElementById('f-origen').value.trim(),
+      categoria:  document.getElementById('f-categoria').value,
+    };
+
+    const saved = await DataService.saveGlossaryEntry(payload);
+
+    if (editingId) {
+      entries = entries.map(e => e.id === editingId ? saved : e);
+    } else {
+      entries.push(saved);
+    }
+
+    renderList();
+    closeModal();
+  });
+
+  /* ── Acciones en la lista (editar / eliminar) ───────────────────────────── */
+  document.getElementById('glos-list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const { action, id } = btn.dataset;
+
+    if (action === 'edit') {
+      const entry = entries.find(e => e.id === id);
+      if (entry) openModal(entry);
+    }
+
+    if (action === 'delete') {
+      if (!confirm(`¿Eliminar "${entries.find(e => e.id === id)?.termino}"?`)) return;
+      await DataService.deleteGlossaryEntry(id);
+      entries = entries.filter(e => e.id !== id);
+      renderList();
+    }
+  });
+
+  /* ── Búsqueda ───────────────────────────────────────────────────────────── */
+  document.getElementById('glos-search').addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderList();
+  });
+
+  /* ── Exportar ───────────────────────────────────────────────────────────── */
+  document.getElementById('btn-export').addEventListener('click', async () => {
+    const json = await DataService.exportGlossary();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `mi-glosario-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  /* ── Render inicial ─────────────────────────────────────────────────────── */
+  renderList();
+})();
+</script>
+</body>
+</html>
