@@ -1,86 +1,296 @@
 {
-  "spot_rate": {
-    "termino": "Spot Rate",
-    "definicion": "Tipo de cambio vigente hoy para intercambiar dos divisas de forma inmediata (liquidación en T+2 en la mayoría de los mercados).",
-    "formula": "Precio de mercado: cuántas unidades de la moneda cotizada equivalen a 1 unidad de la moneda base.",
-    "origen": "Dato de mercado; se ingresa manualmente o se obtiene de un proveedor de precios (Bloomberg, Reuters).",
-    "categoria": "transferible"
+  "_meta": {
+    "version": "2.0",
+    "source": "Nasdaq Calypso Education — Front Office Basics (curso 102) + documentación oficial",
+    "modules": ["forward_fx", "static_data", "pricing_environment", "front_office", "post_trade"]
   },
-  "forward_rate": {
-    "termino": "Forward Rate",
-    "definicion": "Tipo de cambio pactado hoy para una transacción de divisas que se liquidará en una fecha futura determinada.",
-    "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
-    "origen": "Calculado a partir del Spot Rate y la diferencia de tasas de interés entre las dos monedas (Covered Interest Rate Parity).",
-    "categoria": "transferible"
+
+  "forward_fx": {
+    "_module": "Forward FX",
+    "_description": "Conceptos del simulador de Forward FX basados en Covered Interest Rate Parity (CIP)",
+
+    "spot_rate": {
+      "termino": "Spot Rate",
+      "definicion": "Tipo de cambio vigente hoy para intercambiar dos divisas de forma inmediata (liquidación en T+2 en la mayoría de los mercados).",
+      "formula": "Precio de mercado: cuántas unidades de la moneda cotizada equivalen a 1 unidad de la moneda base.",
+      "origen": "Dato de mercado; se ingresa manualmente o se obtiene de un proveedor de precios (Bloomberg, Reuters).",
+      "categoria": "transferible"
+    },
+
+    "forward_rate": {
+      "termino": "Forward Rate",
+      "definicion": "Tipo de cambio pactado hoy para una transacción de divisas que se liquidará en una fecha futura determinada.",
+      "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
+      "origen": "Calculado a partir del Spot Rate y la diferencia de tasas de interés entre las dos monedas (Covered Interest Rate Parity).",
+      "categoria": "transferible"
+    },
+
+    "forward_points": {
+      "termino": "Forward Points",
+      "definicion": "Diferencia entre el Forward Rate y el Spot Rate. Refleja el diferencial de tasas de interés entre las dos monedas.",
+      "formula": "FP = F − S",
+      "origen": "Derivado directamente del Forward Rate calculado. Si las tasas de la moneda cotizada son mayores, los forward points son positivos.",
+      "categoria": "transferible"
+    },
+
+    "tasa_base": {
+      "termino": "Tasa de interés (moneda base)",
+      "definicion": "Tasa de interés anual de la moneda base (ej. USD). Representa el costo o rendimiento de invertir en esa moneda durante el plazo del contrato.",
+      "formula": "Se usa como r_b en la fórmula CIP.",
+      "origen": "Dato de mercado; típicamente corresponde a la tasa interbancaria o de referencia del banco central del país de la moneda base.",
+      "categoria": "transferible"
+    },
+
+    "tasa_cotizada": {
+      "termino": "Tasa de interés (moneda cotizada)",
+      "definicion": "Tasa de interés anual de la moneda cotizada (ej. MXN). Junto con la tasa base, determina el diferencial que define el Forward Rate.",
+      "formula": "Se usa como r_q en la fórmula CIP.",
+      "origen": "Dato de mercado; para MXN suele ser la TIIE. Para EUR, el EURIBOR. Etc.",
+      "categoria": "transferible"
+    },
+
+    "covered_interest_parity": {
+      "termino": "Covered Interest Rate Parity (CIP)",
+      "definicion": "Principio de no-arbitraje que establece que el Forward Rate debe reflejar exactamente el diferencial de tasas de interés entre dos países.",
+      "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
+      "origen": "Estándar de la industria financiera global. Documentado en Hull – Options, Futures & Other Derivatives y en el curriculum del CFA Institute.",
+      "categoria": "transferible"
+    },
+
+    "nocional": {
+      "termino": "Nocional (moneda base)",
+      "definicion": "Monto del contrato expresado en la moneda base. Es la cantidad de divisas que se intercambiará en la fecha de vencimiento.",
+      "formula": "Dato de entrada definido por las partes del contrato.",
+      "origen": "Acordado entre comprador y vendedor al momento de firmar el contrato forward.",
+      "categoria": "transferible"
+    },
+
+    "nocional_cotizada": {
+      "termino": "Nocional (moneda cotizada)",
+      "definicion": "Equivalente del nocional base en la moneda cotizada, calculado al Forward Rate. Es el monto que se pagará/recibirá en la otra moneda.",
+      "formula": "N_cotizada = N_base × F",
+      "origen": "Calculado multiplicando el nocional base por el Forward Rate pactado.",
+      "categoria": "transferible"
+    },
+
+    "dias_vencimiento": {
+      "termino": "Días al vencimiento",
+      "definicion": "Número de días calendario entre la fecha de trade y la fecha de valor (liquidación). Determina el plazo del contrato.",
+      "formula": "d = Fecha_valor − Fecha_trade (en días calendario)",
+      "origen": "Diferencia entre las fechas del contrato. Usado directamente en el denominador de la fórmula CIP.",
+      "categoria": "transferible"
+    },
+
+    "convencion_dias": {
+      "termino": "Convención de días (Day Count)",
+      "definicion": "Define cómo se cuentan los días para calcular el factor de interés. Las más comunes son ACT/360 (base 360 días) y ACT/365 (base 365 días).",
+      "formula": "Factor de interés = r × d / DC  (DC = 360 o 365)",
+      "origen": "Estándar de mercado. USD y MXN típicamente usan ACT/360. GBP y algunas divisas europeas usan ACT/365.",
+      "categoria": "transferible"
+    },
+
+    "npv": {
+      "termino": "NPV — Net Present Value",
+      "definicion": "Valor presente del contrato forward. Al inicio siempre es cero (precio justo). Cambia cuando el spot de mercado se mueve respecto al spot original del contrato.",
+      "formula": "NPV = N × [ S_mkt/(1+rb·t) − F_contract/(1+rq·t) ]",
+      "origen": "Valoración a mercado (Mark-to-Market). Mide cuánto ganaría o perdería si cerrara el contrato hoy al precio de mercado actual.",
+      "categoria": "transferible"
+    },
+
+    "spot_mercado": {
+      "termino": "Spot de mercado actual",
+      "definicion": "Tipo de cambio spot vigente en el momento de la valoración, que puede diferir del spot original del contrato. Se usa para calcular el NPV (MTM).",
+      "formula": "Dato de mercado al momento de la valoración.",
+      "origen": "Al inicio del contrato es igual al spot original → NPV = 0. Si el mercado se mueve, el NPV refleja la ganancia o pérdida flotante.",
+      "categoria": "transferible"
+    }
   },
-  "forward_points": {
-    "termino": "Forward Points",
-    "definicion": "Diferencia entre el Forward Rate y el Spot Rate. Refleja el diferencial de tasas de interés entre las dos monedas.",
-    "formula": "FP = F − S",
-    "origen": "Derivado directamente del Forward Rate calculado. Si las tasas de la moneda cotizada son mayores, los forward points son positivos.",
-    "categoria": "transferible"
+
+  "static_data": {
+    "_module": "Static Data",
+    "_description": "Configuración base que debe existir en Calypso antes de capturar cualquier trade. Fuente: Nasdaq Calypso — Front Office Basics (curso 102).",
+
+    "legal_entity": {
+      "termino": "Legal Entity (Entidad Legal)",
+      "definicion": "Representa una unidad de negocio independiente dentro o fuera de tu organización. Todo trade en Calypso requiere dos entidades: una interna (tu institución) y una externa (contraparte). Sirve como punto de partida para liquidaciones, reportes y límites de crédito.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). Static Data es el primer módulo que debe configurarse antes de cualquier operación.",
+      "categoria": "especifico_calypso"
+    },
+
+    "book": {
+      "termino": "Book (Trading Book)",
+      "definicion": "Contenedor lógico al que pertenece un trade en Calypso. Un trade siempre pertenece a exactamente un Book y a un único tipo de producto. Organiza las posiciones por escritorio de trading, estrategia o regulación.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). La asignación Book–Trade es 1:1 y obligatoria al capturar una operación.",
+      "categoria": "especifico_calypso"
+    },
+
+    "counterparty": {
+      "termino": "Counterparty (Contraparte)",
+      "definicion": "Entidad legal externa con la que se pacta el trade: puede ser un banco, fondo de inversión o cliente corporativo. Calypso la gestiona como Static Data junto con sus instrucciones de liquidación, límites de crédito y calendarios propios.",
+      "formula": "",
+      "origen": "Estándar de la industria financiera. En Calypso se configura como Legal Entity externa dentro del módulo de Static Data.",
+      "categoria": "transferible"
+    },
+
+    "trade_template": {
+      "termino": "Trade Template (Plantilla de Trade)",
+      "definicion": "Plantilla preconfigurada en Calypso que auto-rellena campos estándar al capturar un trade: eventos de crédito, vencimiento, nocional, calendarios y tipos de liquidación. Reduce errores de captura y garantiza consistencia operacional.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). Se configura en Static Data por producto y se selecciona en el momento de la captura del trade.",
+      "categoria": "especifico_calypso"
+    },
+
+    "settlement_instruction": {
+      "termino": "Settlement Instruction (Instrucción de Liquidación)",
+      "definicion": "Define cómo y hacia dónde se realizan los pagos entre las partes del trade: cuenta bancaria, custodio, moneda y método de transferencia. Se asocia a la Legal Entity y se aplica automáticamente al generar los flujos de liquidación.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Post-Trade Processing. Forma parte de la configuración de Static Data del back-office.",
+      "categoria": "especifico_calypso"
+    },
+
+    "calendar": {
+      "termino": "Calendar (Calendario de días hábiles)",
+      "definicion": "Define los días hábiles para cada moneda o centro financiero (ej. NYC, LON, MX). Calypso usa los calendarios para ajustar fechas de liquidación, vencimientos y generación de flujos de caja, asegurando que nunca caigan en festivos.",
+      "formula": "",
+      "origen": "Estándar de la industria (ISDA). En Calypso se configura en Static Data y se asocia a productos, monedas y entidades legales.",
+      "categoria": "transferible"
+    }
   },
-  "tasa_base": {
-    "termino": "Tasa de interés (moneda base)",
-    "definicion": "Tasa de interés anual de la moneda base (ej. USD). Representa el costo o rendimiento de invertir en esa moneda durante el plazo del contrato.",
-    "formula": "Se usa como r_b en la fórmula CIP.",
-    "origen": "Dato de mercado; típicamente corresponde a la tasa interbancaria o de referencia del banco central del país de la moneda base.",
-    "categoria": "transferible"
+
+  "pricing_environment": {
+    "_module": "Pricing Environment",
+    "_description": "El motor que determina cómo Calypso valúa cada producto. Fuente: Nasdaq Calypso — Introducción al Pricing Environment (curso 129).",
+
+    "pricing_environment": {
+      "termino": "Pricing Environment",
+      "definicion": "Marco central de Calypso que agrupa todo lo necesario para valuar un trade: el Pricer Config (algoritmos), el Quote Set (datos de mercado), el Pricing Params Set (parámetros adicionales), la moneda base y las zonas horarias. Sin un Pricing Environment válido, ningún trade puede ser valuado.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Introducción al Pricing Environment (curso 129). Es el punto de entrada de toda la cadena de valoración en la plataforma.",
+      "categoria": "especifico_calypso"
+    },
+
+    "pricer_config": {
+      "termino": "Pricer Config (Configuración del Pricer)",
+      "definicion": "Define qué algoritmo de valuación (pricer) se usa para cada tipo de producto, y qué curvas de tasas o superficies de volatilidad se usan como insumo. Permite que distintos escritorios usen diferentes modelos de pricing para el mismo instrumento.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Introducción al Pricing Environment (curso 129). Es el componente que mapea producto → modelo de pricing → datos de mercado.",
+      "categoria": "especifico_calypso"
+    },
+
+    "quote_set": {
+      "termino": "Quote Set (Conjunto de Cotizaciones)",
+      "definicion": "Colección de cotizaciones de mercado en tiempo real o de cierre (tasas, FX spots, precios de bonos) asociada al Pricing Environment. Es la fuente primaria de datos de mercado que Calypso usa para construir curvas y valuar trades.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Introducción al Pricing Environment (curso 129). Los Quote Sets se alimentan de proveedores externos (Bloomberg, Reuters) o se ingresan manualmente.",
+      "categoria": "especifico_calypso"
+    },
+
+    "yield_curve": {
+      "termino": "Yield Curve / Rate Curve (Curva de Tasas)",
+      "definicion": "Curva que relaciona los plazos de tiempo con las tasas de interés correspondientes. Calypso la construye a partir de instrumentos de mercado (depósitos, futuros, swaps) y la usa para descontar flujos futuros y calcular el valor presente de cualquier producto de tasa.",
+      "formula": "Factor de descuento: P(t) = 1 / (1 + r(t) × t)  para curvas lineales simples",
+      "origen": "Estándar de la industria financiera. En Calypso se construyen en el módulo de Market Data y se referencian desde el Pricer Config.",
+      "categoria": "transferible"
+    },
+
+    "pricing_params_set": {
+      "termino": "Pricing Params Set",
+      "definicion": "Conjunto de parámetros adicionales del modelo de valuación: tolerancias numéricas, número de pasos de simulación, convenciones de interpolación, etc. Permite ajustar la precisión y el comportamiento del pricer sin cambiar el algoritmo central.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Introducción al Pricing Environment (curso 129). Complementa al Pricer Config con parámetros técnicos del modelo.",
+      "categoria": "especifico_calypso"
+    }
   },
-  "tasa_cotizada": {
-    "termino": "Tasa de interés (moneda cotizada)",
-    "definicion": "Tasa de interés anual de la moneda cotizada (ej. MXN). Junto con la tasa base, determina el diferencial que define el Forward Rate.",
-    "formula": "Se usa como r_q en la fórmula CIP.",
-    "origen": "Dato de mercado; para MXN suele ser la TIIE. Para EUR, el EURIBOR. Etc.",
-    "categoria": "transferible"
+
+  "front_office": {
+    "_module": "Front Office & Trade Capture",
+    "_description": "El proceso de registrar y gestionar operaciones en tiempo real. Fuente: Nasdaq Calypso — Front Office Basics (curso 102) y Front Office Introduction (curso 1001).",
+
+    "trade": {
+      "termino": "Trade (Operación)",
+      "definicion": "Registro central en Calypso de una operación financiera. Contiene todos los atributos de la operación: producto, entidades involucradas, fechas, nocional, precio pactado y estado actual. Es la unidad mínima de toda la plataforma; todos los módulos (riesgo, liquidación, contabilidad) lo referencian.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). El trade se crea en Trade Capture y transita por estados hasta su liquidación.",
+      "categoria": "especifico_calypso"
+    },
+
+    "trade_blotter": {
+      "termino": "Trade Blotter",
+      "definicion": "Vista tabular en tiempo real de todos los trades de un Book o escritorio de trading. Permite filtrar por estado, producto o contraparte, y ejecutar acciones de lifecycle directamente desde la lista (confirmar, cancelar, enmendar). Es la pantalla principal del trader en Calypso.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Introduction (curso 1001). La interfaz del blotter es configurable por usuario y por Book.",
+      "categoria": "especifico_calypso"
+    },
+
+    "trade_status": {
+      "termino": "Trade Status / Lifecycle",
+      "definicion": "Estado del trade en su ciclo de vida dentro de Calypso. Los estados típicos son: NEW → VALIDATED → CONFIRMED → MATURED → SETTLED. Al transicionar de estado, Calypso puede disparar eventos automáticos (generación de confirmaciones, instrucciones de liquidación, actualizaciones de posición).",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). Los estados y las transiciones permitidas se configuran por producto y entidad.",
+      "categoria": "especifico_calypso"
+    },
+
+    "stp": {
+      "termino": "STP — Straight Through Processing",
+      "definicion": "Flujo de trabajo automatizado que mueve un trade entre estados (ej. NEW → CONFIRMED → SETTLED) sin intervención manual. En Calypso se configura mediante reglas de workflow que evalúan condiciones y disparan transiciones de estado automáticamente, reduciendo errores operacionales.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — documentación oficial. El STP es uno de los diferenciadores clave de la plataforma para operaciones de alto volumen.",
+      "categoria": "transferible"
+    },
+
+    "lifecycle_event": {
+      "termino": "Lifecycle Event (Evento de Ciclo de Vida)",
+      "definicion": "Acción o evento que modifica el estado o los atributos de un trade durante su vida: booking inicial, enmienda, cancelación, vencimiento, liquidación parcial o total. Calypso registra cada evento con timestamp y usuario, formando un audit trail completo.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Front Office Basics (curso 102). Los lifecycle events son la base del procesamiento event-driven de la plataforma.",
+      "categoria": "especifico_calypso"
+    }
   },
-  "covered_interest_parity": {
-    "termino": "Covered Interest Rate Parity (CIP)",
-    "definicion": "Principio de no-arbitraje que establece que el Forward Rate debe reflejar exactamente el diferencial de tasas de interés entre dos países.",
-    "formula": "F = S × (1 + r_q × d/DC) / (1 + r_b × d/DC)",
-    "origen": "Estándar de la industria financiera global. Documentado en Hull – Options, Futures & Other Derivatives y en el curriculum del CFA Institute.",
-    "categoria": "transferible"
-  },
-  "nocional": {
-    "termino": "Nocional (moneda base)",
-    "definicion": "Monto del contrato expresado en la moneda base. Es la cantidad de divisas que se intercambiará en la fecha de vencimiento.",
-    "formula": "Dato de entrada definido por las partes del contrato.",
-    "origen": "Acordado entre comprador y vendedor al momento de firmar el contrato forward.",
-    "categoria": "transferible"
-  },
-  "nocional_cotizada": {
-    "termino": "Nocional (moneda cotizada)",
-    "definicion": "Equivalente del nocional base en la moneda cotizada, calculado al Forward Rate. Es el monto que se pagará/recibirá en la otra moneda.",
-    "formula": "N_cotizada = N_base × F",
-    "origen": "Calculado multiplicando el nocional base por el Forward Rate pactado.",
-    "categoria": "transferible"
-  },
-  "dias_vencimiento": {
-    "termino": "Días al vencimiento",
-    "definicion": "Número de días calendario entre la fecha de trade y la fecha de valor (liquidación). Determina el plazo del contrato.",
-    "formula": "d = Fecha_valor − Fecha_trade (en días calendario)",
-    "origen": "Diferencia entre las fechas del contrato. Usado directamente en el denominador de la fórmula CIP.",
-    "categoria": "transferible"
-  },
-  "convencion_dias": {
-    "termino": "Convención de días (Day Count)",
-    "definicion": "Define cómo se cuentan los días para calcular el factor de interés. Las más comunes son ACT/360 (base 360 días) y ACT/365 (base 365 días).",
-    "formula": "Factor de interés = r × d / DC  (DC = 360 o 365)",
-    "origen": "Estándar de mercado. USD y MXN típicamente usan ACT/360. GBP y algunas divisas europeas usan ACT/365.",
-    "categoria": "transferible"
-  },
-  "npv": {
-    "termino": "NPV — Net Present Value",
-    "definicion": "Valor presente del contrato forward. Al inicio siempre es cero (precio justo). Cambia cuando el spot de mercado se mueve respecto al spot original del contrato.",
-    "formula": "NPV = N × [ S_mkt/(1+rb·t) − F_contract/(1+rq·t) ]",
-    "origen": "Valoración a mercado (Mark-to-Market). Mide cuánto ganaría o perdería si cerrara el contrato hoy al precio de mercado actual.",
-    "categoria": "transferible"
-  },
-  "spot_mercado": {
-    "termino": "Spot de mercado actual",
-    "definicion": "Tipo de cambio spot vigente en el momento de la valoración, que puede diferir del spot original del contrato. Se usa para calcular el NPV (MTM).",
-    "formula": "Dato de mercado al momento de la valoración.",
-    "origen": "Al inicio del contrato es igual al spot original → NPV = 0. Si el mercado se mueve, el NPV refleja la ganancia o pérdida flotante.",
-    "categoria": "transferible"
+
+  "post_trade": {
+    "_module": "Post-Trade & Back Office",
+    "_description": "Lo que ocurre después de capturar el trade hasta su liquidación final. Fuente: Nasdaq Calypso — Post-Trade Processing.",
+
+    "settlement": {
+      "termino": "Settlement (Liquidación)",
+      "definicion": "Proceso de intercambio final de los flujos de caja o valores entre las partes de un trade. En Calypso, las instrucciones de liquidación se generan automáticamente a partir de los datos del trade y las Settlement Instructions de la contraparte, y se envían a los custodios o sistemas de pago.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Post-Trade Processing. El módulo de settlement integra con CLS, SWIFT y custodios locales.",
+      "categoria": "transferible"
+    },
+
+    "netting": {
+      "termino": "Netting (Compensación de Flujos)",
+      "definicion": "Mecanismo por el cual dos o más obligaciones de pago entre las mismas partes se compensan: en lugar de intercambiar cada flujo individualmente, se calcula la diferencia neta y solo se paga esa cantidad. Reduce el riesgo de contraparte y los costos de liquidación.",
+      "formula": "Pago neto = Flujos a recibir − Flujos a pagar (misma moneda, misma fecha, misma contraparte)",
+      "origen": "Estándar ISDA. En Calypso se configura mediante netting agreements entre entidades legales y se aplica automáticamente en el proceso de settlement.",
+      "categoria": "transferible"
+    },
+
+    "position": {
+      "termino": "Position (Posición)",
+      "definicion": "Agregado en tiempo real de todos los trades de un mismo Book y producto, que resulta en una exposición neta. Calypso actualiza las posiciones automáticamente cada vez que se captura, enmienda o cancela un trade. Las posiciones son la base del cálculo de riesgo y P&L.",
+      "formula": "Posición neta = Σ nocionales de trades compra − Σ nocionales de trades venta",
+      "origen": "Estándar de la industria. En Calypso el Position Keeping es en tiempo real y se puede ver agregado por Book, producto o entidad.",
+      "categoria": "transferible"
+    },
+
+    "eod": {
+      "termino": "End of Day (EOD)",
+      "definicion": "Proceso batch nocturno de Calypso que cierra el día operativo: descarga de precios de cierre del mercado, recálculo de MTM de todas las posiciones, generación de reportes regulatorios, procesamiento de márgenes y descarga de archivos de CCPs. Es crítico para la exactitud del P&L diario.",
+      "formula": "",
+      "origen": "Nasdaq Calypso — Post-Trade Processing. El EOD es un proceso orquestado con dependencias entre pasos; su correcta configuración es esencial para operaciones institucionales.",
+      "categoria": "especifico_calypso"
+    },
+
+    "mtm_calypso": {
+      "termino": "Mark-to-Market en Calypso (MTM)",
+      "definicion": "Revaluación de todas las posiciones al precio de mercado actual, ejecutada tanto intraday como en el EOD. Una característica clave de Calypso es que el front-office y el área de riesgo usan exactamente el mismo motor de pricing, garantizando que los traders y el área de riesgo vean los mismos números.",
+      "formula": "MTM = Valor de mercado actual − Valor en libros (costo histórico)",
+      "origen": "Nasdaq Calypso — Risk Management. La consistencia front-to-back en valuación es uno de los principios de diseño centrales de la plataforma.",
+      "categoria": "transferible"
+    }
   }
 }

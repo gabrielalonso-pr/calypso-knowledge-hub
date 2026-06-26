@@ -401,19 +401,54 @@
     }
   </style>
 </head>
-<body>
+<body class="has-sidebar">
+<div class="layout">
 
-  <header class="app-header">
-    <div class="header-inner">
+  <!-- ══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
       <div class="logo">
         <span class="logo-mark">◈</span>
-        <span class="logo-name">Calypso <strong>Knowledge Hub</strong></span>
+        <span class="logo-name">Calypso <strong>Hub</strong></span>
       </div>
-      <nav class="product-nav">
-        <a href="index.html"><button class="product-btn" type="button">Forward FX</button></a>
-        <button class="product-btn active" type="button">Editor XML</button>
-      </nav>
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Colapsar menú" aria-label="Colapsar menú">‹</button>
     </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">Knowledge</span>
+        <a href="dictionary.html" class="nav-item">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">Diccionario Calypso</span>
+        </a>
+        <a href="glossary.html" class="nav-item">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label">Mi Glosario</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">Products</span>
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">↔</span>
+          <span class="nav-label">Forward FX</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">Tools</span>
+        <a href="xml-editor.html" class="nav-item active">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Editor XML</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
+  <div class="page-wrap">
+
+  <header class="page-header">
+    <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
+    <h1 class="page-title">Editor XML de Trades</h1>
+    <p class="page-subtitle">Sube un XML de trade de Calypso, modifica los valores y exporta CDUF</p>
   </header>
 
   <main class="app-main">
@@ -488,6 +523,8 @@
     </div>
 
   </main>
+  </div><!-- /page-wrap -->
+</div><!-- /layout -->
 
   <!-- ── Modal ──────────────────────────────────────────────────────── -->
   <div id="export-modal" class="xe-modal-overlay hidden" role="dialog" aria-modal="true">
@@ -504,9 +541,6 @@
 
   <script src="js/xml-editor.js"></script>
   <script>
-    // Show topbar and hide drop-wrapper when file loads
-    const _origLoad = loadFile;
-    document.getElementById('file-input').addEventListener('change', () => {});
     // Wire topbar visibility via MutationObserver on #editor-area
     const _obs = new MutationObserver(() => {
       const hidden = document.getElementById('editor-area').classList.contains('hidden');
@@ -515,8 +549,6 @@
     });
     _obs.observe(document.getElementById('editor-area'), { attributes: true, attributeFilter: ['class'] });
 
-    // Update trade tag label
-    const _origParse = parseXML;
     // Patch: after parse, update label
     document.getElementById('file-input').addEventListener('change', () => {
       setTimeout(() => {
@@ -529,10 +561,25 @@
       }, 100);
     });
 
-    // Change file also hides topbar
     document.getElementById('btn-change-file').addEventListener('click', () => {
       // editor-area is hidden by js/xml-editor.js, observer handles the rest
     }, { capture: true });
+
+    // Sidebar toggle
+    (function() {
+      const sidebar      = document.getElementById('sidebar');
+      const toggleBtn    = document.getElementById('sidebar-toggle');
+      const headerToggle = document.getElementById('header-toggle');
+      function setSidebarCollapsed(c) {
+        sidebar.classList.toggle('sidebar--collapsed', c);
+        toggleBtn.textContent = c ? '›' : '‹';
+        toggleBtn.title = c ? 'Expandir menú' : 'Colapsar menú';
+        localStorage.setItem('sidebar_collapsed', c ? '1' : '0');
+      }
+      setSidebarCollapsed(localStorage.getItem('sidebar_collapsed') === '1');
+      toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+      headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+    })();
   </script>
 </body>
 </html>

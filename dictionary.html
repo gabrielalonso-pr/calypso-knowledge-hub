@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diccionario Calypso — Knowledge Hub</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="has-sidebar">
+
+<div class="layout">
+
+  <!-- ══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        <span class="logo-name">Calypso <strong>Hub</strong></span>
+      </div>
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Colapsar menú" aria-label="Colapsar menú">‹</button>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <div class="nav-section">
+        <span class="nav-section-label">Knowledge</span>
+        <a href="dictionary.html" class="nav-item active">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">Diccionario Calypso</span>
+        </a>
+        <a href="glossary.html" class="nav-item">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label">Mi Glosario</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Products</span>
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">↔</span>
+          <span class="nav-label">Forward FX</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Tools</span>
+        <a href="xml-editor.html" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Editor XML</span>
+        </a>
+      </div>
+
+    </nav>
+  </aside>
+
+  <!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
+  <div class="page-wrap">
+
+    <header class="page-header">
+      <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
+      <h1 class="page-title">Diccionario Calypso</h1>
+      <p class="page-subtitle">Conceptos organizados por módulo · Fuente: Nasdaq Calypso Education</p>
+    </header>
+
+    <main class="page-main">
+
+      <!-- Buscador -->
+      <div class="dict-search-wrap">
+        <input type="search" id="dict-search" class="dict-search"
+               placeholder="Buscar término..." autocomplete="off">
+        <div class="dict-filter-wrap">
+          <button class="filter-btn active" data-filter="all" type="button">Todos</button>
+          <button class="filter-btn" data-filter="transferible" type="button">Transferible</button>
+          <button class="filter-btn" data-filter="especifico_calypso" type="button">Específico Calypso</button>
+        </div>
+      </div>
+
+      <!-- Módulos del diccionario (generados por JS) -->
+      <div id="dict-modules"></div>
+
+      <p id="dict-empty" class="dict-empty hidden">No se encontraron términos para esa búsqueda.</p>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════ TOOLTIP DICCIONARIO ══════════════════════════ -->
+<div id="dict-tooltip" class="dict-tooltip hidden" role="tooltip" aria-hidden="true">
+  <button class="tooltip-close" id="tooltip-close" type="button" aria-label="Cerrar">✕</button>
+  <div class="tooltip-term-row">
+    <span class="tooltip-term" id="tt-term"></span>
+    <span class="tooltip-cat"  id="tt-cat"></span>
+  </div>
+  <p class="tooltip-def" id="tt-def"></p>
+  <div class="tooltip-detail" id="tt-formula-row">
+    <span class="tooltip-detail-label">Fórmula:</span>
+    <code id="tt-formula"></code>
+  </div>
+  <div class="tooltip-detail" id="tt-origin-row">
+    <span class="tooltip-detail-label">Origen:</span>
+    <span id="tt-origin"></span>
+  </div>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/dictionary.js"></script>
+<script>
+(async () => {
+  /* ── Sidebar toggle ─────────────────────────────────────────────────────── */
+  const sidebar       = document.getElementById('sidebar');
+  const toggleBtn     = document.getElementById('sidebar-toggle');
+  const headerToggle  = document.getElementById('header-toggle');
+
+  function setSidebarCollapsed(collapsed) {
+    sidebar.classList.toggle('sidebar--collapsed', collapsed);
+    toggleBtn.textContent = collapsed ? '›' : '‹';
+    toggleBtn.title = collapsed ? 'Expandir menú' : 'Colapsar menú';
+    localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+  }
+
+  const storedCollapsed = localStorage.getItem('sidebar_collapsed') === '1';
+  setSidebarCollapsed(storedCollapsed);
+
+  toggleBtn.addEventListener('click', () =>
+    setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  headerToggle.addEventListener('click', () =>
+    setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+
+  /* ── Cargar diccionario ─────────────────────────────────────────────────── */
+  const MODULE_LABELS = {
+    forward_fx:          { label: 'Forward FX', icon: '↔', desc: 'Conceptos del simulador de Forward FX basados en Covered Interest Rate Parity (CIP)' },
+    static_data:         { label: 'Static Data', icon: '🗂', desc: 'Configuración base que debe existir en Calypso antes de capturar cualquier trade' },
+    pricing_environment: { label: 'Pricing Environment', icon: '⚡', desc: 'El motor que determina cómo Calypso valúa cada producto' },
+    front_office:        { label: 'Front Office & Trade Capture', icon: '📈', desc: 'El proceso de registrar y gestionar operaciones en tiempo real' },
+    post_trade:          { label: 'Post-Trade & Back Office', icon: '✅', desc: 'Lo que ocurre después de capturar el trade hasta su liquidación final' },
+  };
+
+  const data = await DataService.getDictionary();
+  renderModules(data);
+  Dictionary.init();
+
+  /* ── Renderizado ─────────────────────────────────────────────────────────── */
+  function renderModules(data, searchTerm = '', filterCat = 'all') {
+    const container = document.getElementById('dict-modules');
+    const emptyMsg  = document.getElementById('dict-empty');
+    container.innerHTML = '';
+
+    const q = searchTerm.toLowerCase().trim();
+    let totalVisible = 0;
+
+    for (const moduleKey of Object.keys(data)) {
+      if (moduleKey === '_meta') continue;
+      const module = data[moduleKey];
+      const meta   = MODULE_LABELS[moduleKey] || { label: moduleKey, icon: '📄', desc: '' };
+
+      const entries = Object.entries(module).filter(([k, v]) => {
+        if (k.startsWith('_')) return false;
+        if (filterCat !== 'all' && v.categoria !== filterCat) return false;
+        if (q && !v.termino.toLowerCase().includes(q) && !v.definicion.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      if (entries.length === 0) continue;
+      totalVisible += entries.length;
+
+      const section = document.createElement('section');
+      section.className = 'dict-module';
+      section.innerHTML = `
+        <div class="dict-module-header">
+          <span class="dict-module-icon">${meta.icon}</span>
+          <div>
+            <h2 class="dict-module-title">${meta.label}</h2>
+            <p class="dict-module-desc">${meta.desc}</p>
+          </div>
+          <span class="dict-module-count">${entries.length} término${entries.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="dict-entries">
+          ${entries.map(([key, entry]) => renderEntry(key, entry)).join('')}
+        </div>
+      `;
+      container.appendChild(section);
+    }
+
+    emptyMsg.classList.toggle('hidden', totalVisible > 0);
+  }
+
+  function renderEntry(key, entry) {
+    const catLabel = entry.categoria === 'transferible' ? 'Transferible' : 'Específico Calypso';
+    const catClass = 'tooltip-cat--' + entry.categoria;
+    const formula  = entry.formula
+      ? `<div class="entry-detail"><span class="entry-detail-label">Fórmula</span><code>${entry.formula}</code></div>`
+      : '';
+    const origen   = entry.origen
+      ? `<div class="entry-detail"><span class="entry-detail-label">Origen</span><span>${entry.origen}</span></div>`
+      : '';
+
+    return `
+      <div class="dict-entry" data-key="${key}" data-cat="${entry.categoria}">
+        <div class="entry-header">
+          <span class="entry-term">${entry.termino}</span>
+          <span class="tooltip-cat ${catClass}">${catLabel}</span>
+        </div>
+        <p class="entry-def">${entry.definicion}</p>
+        ${formula}
+        ${origen}
+      </div>
+    `;
+  }
+
+  /* ── Búsqueda y filtros ─────────────────────────────────────────────────── */
+  let currentFilter = 'all';
+
+  document.getElementById('dict-search').addEventListener('input', (e) => {
+    renderModules(data, e.target.value, currentFilter);
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderModules(data, document.getElementById('dict-search').value, currentFilter);
+    });
+  });
+})();
+</script>
+</body>
+</html>

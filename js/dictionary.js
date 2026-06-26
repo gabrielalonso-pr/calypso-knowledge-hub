@@ -1,18 +1,34 @@
 /**
  * Sistema de tooltips del diccionario interactivo.
- * Carga dictionary.json y registra listeners en todos los botones [data-dict].
+ * Usa DataService para cargar entradas; soporta la estructura anidada por módulos.
  */
 const Dictionary = (() => {
-  let entries = {};
+  let _flat = {};
   const tooltip = document.getElementById('dict-tooltip');
 
   async function load() {
-    const res = await fetch('data/dictionary.json');
-    entries = await res.json();
+    const data = await DataService.getDictionary();
+    _flat = _flattenDictionary(data);
   }
 
+  /** Aplana la estructura { module: { _module, _description, key: entry } } en { key: entry } */
+  function _flattenDictionary(data) {
+    const flat = {};
+    for (const moduleKey of Object.keys(data)) {
+      if (moduleKey === '_meta') continue;
+      const module = data[moduleKey];
+      for (const entryKey of Object.keys(module)) {
+        if (entryKey.startsWith('_')) continue;
+        flat[entryKey] = module[entryKey];
+      }
+    }
+    return flat;
+  }
+
+  function getFlat() { return _flat; }
+
   function show(key, anchorEl) {
-    const entry = entries[key];
+    const entry = _flat[key];
     if (!entry) return;
 
     document.getElementById('tt-term').textContent = entry.termino;
@@ -83,5 +99,5 @@ const Dictionary = (() => {
     });
   }
 
-  return { load, init };
+  return { load, init, getFlat };
 })();
