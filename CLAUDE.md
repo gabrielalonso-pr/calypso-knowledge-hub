@@ -67,6 +67,8 @@ El parser detecta el tag raíz y el tag de segundo nivel automáticamente — fu
   apuntando a `main`. Incluye en el body: resumen, tabla de archivos modificados y checklist de pruebas.
 - Yo reviso y hago el merge manualmente — nunca hagas merge ni cierres el PR.
 - No me pidas confirmación para crear el PR; es parte del flujo normal de entrega.
+- Antes de asumir que un PR está abierto, verifica su estado con la API de 
+  GitHub. Si el PR de la rama actual ya fue mergeado o cerrado, crea un nuevo PR.
 
 ## Forma de trabajar
 - Antes de codear una feature, resume el plan en 3-4 líneas y espera mi aprobación
