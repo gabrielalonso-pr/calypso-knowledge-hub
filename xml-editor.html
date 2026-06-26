@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor XML de Trades — Calypso Knowledge Hub</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Drop Zone ──────────────────────────────────────────────────── */
+    .xe-drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      padding: 4rem 2rem;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      text-align: center;
+      max-width: 600px;
+      margin: 3rem auto;
+    }
+    .xe-drop-zone:hover, .xe-drop-zone.xe-drag-over {
+      border-color: var(--blue-600);
+      background: var(--blue-50);
+    }
+    .xe-drop-icon { font-size: 3rem; line-height: 1; }
+    .xe-drop-title { font-size: 1.1rem; font-weight: 700; color: var(--gray-900); }
+    .xe-drop-sub { font-size: .85rem; color: var(--gray-500); }
+    .xe-drop-btn {
+      background: var(--blue-600);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      padding: .55rem 1.4rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      pointer-events: none;
+    }
+    .xe-drop-zone:hover .xe-drop-btn { background: var(--blue-700); }
+
+    /* ── Editor layout ──────────────────────────────────────────────── */
+    .xe-editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .xe-editor-layout { grid-template-columns: 1fr; } }
+
+    /* ── Editor header bar ──────────────────────────────────────────── */
+    .xe-editor-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-bottom: 1rem;
+    }
+    .xe-filename {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .xe-filename-icon { color: var(--blue-600); }
+    .xe-topbar-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+    /* ── Form panel ─────────────────────────────────────────────────── */
+    .xe-form-panel {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .xe-form-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .85rem 1.1rem;
+      border-bottom: 1px solid var(--gray-200);
+      background: var(--gray-50);
+    }
+    .xe-form-panel-head h2 { font-size: .95rem; font-weight: 700; color: var(--gray-900); }
+    #trade-form { padding: .5rem 0; }
+
+    /* ── Field rows ─────────────────────────────────────────────────── */
+    .xe-field-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .45rem 1.1rem;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .1s;
+    }
+    .xe-field-row:hover { background: var(--gray-50); }
+    .xe-field-row label {
+      flex: 0 0 200px;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--gray-700);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .xe-field-row input {
+      flex: 1;
+      height: 32px;
+      padding: 0 .6rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-size: .85rem;
+      color: var(--gray-900);
+      background: var(--white);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .xe-field-row input:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 2px var(--blue-100);
+    }
+    .xe-field-row input::placeholder { color: var(--gray-300); font-style: italic; }
+
+    /* ── Group sections ─────────────────────────────────────────────── */
+    .xe-group {
+      margin: .4rem .75rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .xe-group-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .55rem .85rem;
+      background: var(--blue-50);
+      border: none;
+      border-bottom: 1px solid var(--gray-200);
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--blue-700);
+      text-align: left;
+      transition: background .15s;
+    }
+    .xe-group-header:hover { background: var(--blue-100); }
+    .xe-group-arrow { font-size: .75rem; transition: transform .15s; }
+    .xe-group-body { padding: .25rem 0; }
+    .xe-group-body.xe-collapsed { display: none; }
+    .xe-group-body .xe-field-row { padding-left: 1rem; }
+
+    /* ── Sidebar ────────────────────────────────────────────────────── */
+    .xe-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+    .xe-sidebar-panel {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .xe-sidebar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--gray-200);
+      background: var(--gray-50);
+    }
+    .xe-sidebar-head h3 { font-size: .85rem; font-weight: 700; color: var(--gray-900); }
+    .xe-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 .4rem;
+      background: var(--blue-600);
+      color: var(--white);
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 700;
+      transition: transform .2s;
+    }
+    .xe-badge-flash { transform: scale(1.4); }
+
+    #records-list {
+      list-style: none;
+      padding: .5rem 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .xe-no-records {
+      padding: .75rem 1rem;
+      font-size: .82rem;
+      color: var(--gray-500);
+      font-style: italic;
+    }
+    .xe-record-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .5rem 1rem;
+      border-bottom: 1px solid var(--gray-100);
+      gap: .5rem;
+    }
+    .xe-record-label {
+      font-size: .8rem;
+      color: var(--gray-700);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .xe-record-actions { display: flex; gap: .3rem; flex-shrink: 0; }
+    .xe-rec-btn {
+      background: none;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: .15rem .45rem;
+      font-size: .78rem;
+      cursor: pointer;
+      color: var(--gray-500);
+      transition: all .15s;
+    }
+    .xe-rec-load:hover { background: var(--blue-50); border-color: var(--blue-600); color: var(--blue-700); }
+    .xe-rec-del:hover  { background: var(--red-50);  border-color: var(--red-600);  color: var(--red-600); }
+
+    /* ── Action buttons ─────────────────────────────────────────────── */
+    .xe-action-btn {
+      display: block;
+      width: calc(100% - 2rem);
+      margin: .4rem 1rem;
+      padding: .6rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .xe-btn-add {
+      background: var(--gray-900);
+      color: var(--white);
+    }
+    .xe-btn-add:hover { background: var(--gray-700); }
+    .xe-btn-export {
+      background: var(--blue-600);
+      color: var(--white);
+    }
+    .xe-btn-export:hover { background: var(--blue-700); }
+    .xe-btn-clear {
+      background: none;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-600);
+    }
+    .xe-btn-clear:hover { background: var(--gray-100); border-color: var(--gray-400); }
+
+    /* ── Modal ──────────────────────────────────────────────────────── */
+    .xe-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+    .xe-modal-overlay.hidden { display: none; }
+    .xe-modal-box {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      padding: 1.75rem;
+      max-width: 420px;
+      width: 90%;
+    }
+    .xe-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: .85rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .xe-modal-body {
+      font-size: .88rem;
+      color: var(--gray-700);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+    .xe-modal-warn { color: var(--amber-500); font-weight: 700; }
+    .xe-modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+
+    /* ── Error banner ───────────────────────────────────────────────── */
+    #error-banner {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--red-50);
+      border: 1px solid var(--red-600);
+      color: var(--red-600);
+      border-radius: var(--radius);
+      padding: .6rem 1.25rem;
+      font-size: .88rem;
+      font-weight: 600;
+      z-index: 400;
+      box-shadow: var(--shadow);
+      max-width: 520px;
+      text-align: center;
+    }
+    #error-banner.hidden { display: none; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        <span class="logo-name">Calypso <strong>Knowledge Hub</strong></span>
+      </div>
+      <nav class="product-nav" aria-label="Navegación">
+        <a href="index.html"><button class="product-btn" type="button">Forward FX</button></a>
+        <button class="product-btn active" type="button">Editor XML</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <div class="product-intro">
+      <div>
+        <h1>Editor XML de Trades</h1>
+        <p class="product-desc">
+          Sube un XML de trade de Calypso, modifica los valores y exporta un archivo
+          CDUF con uno o múltiples registros.
+        </p>
+      </div>
+      <div class="tag-group">
+        <span class="tag tag--calypso">Calypso</span>
+      </div>
+    </div>
+
+    <!-- Error banner -->
+    <div id="error-banner" class="hidden" role="alert"></div>
+
+    <!-- ── Drop zone ──────────────────────────────────────────────── -->
+    <div id="drop-zone" class="xe-drop-zone" role="button" tabindex="0"
+         aria-label="Subir archivo XML">
+      <div class="xe-drop-icon">📄</div>
+      <div class="xe-drop-title">Arrastra tu archivo XML aquí</div>
+      <div class="xe-drop-sub">o haz clic para seleccionarlo desde tu equipo</div>
+      <span class="xe-drop-btn">Seleccionar archivo</span>
+      <input id="file-input" type="file" accept=".xml" style="display:none">
+    </div>
+
+    <!-- ── Editor area ─────────────────────────────────────────────── -->
+    <div id="editor-area" class="hidden">
+
+      <div class="xe-editor-topbar">
+        <div class="xe-filename">
+          <span class="xe-filename-icon">📄</span>
+          <span id="editor-filename">archivo.xml</span>
+        </div>
+        <div class="xe-topbar-actions">
+          <button id="btn-change-file" class="btn-ghost" type="button">↩ Cargar otro archivo</button>
+        </div>
+      </div>
+
+      <div class="xe-editor-layout">
+
+        <!-- Formulario -->
+        <div class="xe-form-panel">
+          <div class="xe-form-panel-head">
+            <h2>Datos del trade</h2>
+            <button id="btn-clear" class="btn-ghost xe-btn-clear" type="button">✕ Limpiar valores</button>
+          </div>
+          <form id="trade-form" autocomplete="off"></form>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="xe-sidebar">
+
+          <!-- Acciones -->
+          <div class="xe-sidebar-panel">
+            <div class="xe-sidebar-head">
+              <h3>Acciones</h3>
+            </div>
+            <div style="padding: .75rem 0;">
+              <button id="btn-add-record" class="xe-action-btn xe-btn-add" type="button">
+                + Agregar registro
+              </button>
+              <button id="btn-export" class="xe-action-btn xe-btn-export" type="button">
+                ⬇ Exportar CDUF
+              </button>
+            </div>
+          </div>
+
+          <!-- Registros guardados -->
+          <div class="xe-sidebar-panel">
+            <div class="xe-sidebar-head">
+              <h3>Registros guardados</h3>
+              <span class="xe-badge" id="records-count">0</span>
+            </div>
+            <ul id="records-list">
+              <li class="xe-no-records">Ningún registro guardado aún.</li>
+            </ul>
+          </div>
+
+        </aside>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Modal de confirmación de exportación ──────────────────────── -->
+  <div id="export-modal" class="xe-modal-overlay hidden" role="dialog"
+       aria-modal="true" aria-labelledby="modal-title">
+    <div class="xe-modal-box">
+      <div class="xe-modal-title" id="modal-title">
+        <span>📤</span> Confirmar exportación
+      </div>
+      <div class="xe-modal-body" id="modal-message"></div>
+      <div class="xe-modal-actions">
+        <button id="modal-cancel" class="btn-ghost" type="button">Cancelar</button>
+        <button id="modal-confirm" class="xe-action-btn xe-btn-export"
+                style="width:auto;margin:0;padding:.5rem 1.25rem;" type="button">
+          Exportar XML
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/xml-editor.js"></script>
+</body>
+</html>
