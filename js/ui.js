@@ -1,272 +1,287 @@
 /**
- * Controlador principal de la UI del simulador Forward FX.
+ * Controlador UI — Forward FX Simulator.
  *
- * Estado central (`state`): fuente única de verdad para todos los valores.
- * Lógica bidireccional: cualquier output puede ser "bloqueado" por el usuario.
- *   Al bloquear un output, recalc() despeja el input que mejor lo explica.
+ * ESTADO: `state` es la fuente única de verdad.
+ * LOCKS:  Cualquier output puede bloquearse; al hacerlo se despeja el input correspondiente.
  *
- * Mapa de bloqueos:
- *   forwardRate  bloqueado → despeja rateQuote
- *   forwardPoints bloqueado → convierte a forwardRate → despeja rateQuote
+ *   fwdRate      bloqueado → despeja rateQuote
+ *   fwdPoints    bloqueado → convierte a fwdRate → despeja rateQuote
  *   notionalQuote bloqueado → despeja notionalBase
  *   npv          bloqueado → despeja spotMarket
- *   spotMarket   editable libre → recalcula npv directamente (no bloquea)
+ *
+ * GUARDS: Todas las llamadas al Engine verifican null antes de actualizar el DOM.
  */
 
-// ── Utilidades de formato ──────────────────────────────────────────────────
+// ── Formato numérico ───────────────────────────────────────────────────────
+// Usamos toFixed para campos input[type=number] (no aceptan comas).
+// Usamos toLocaleString solo para spans de display.
 
-const fmt = (n, dec) => n == null || isNaN(n) ? '' : n.toLocaleString('en-US', {
-  minimumFractionDigits: dec,
-  maximumFractionDigits: dec,
-});
-const fmt2 = n => fmt(n, 2);
-const fmt4 = n => fmt(n, 4);
-const fmt6 = n => fmt(n, 6);
-const fmt0 = n => fmt(n, 0);
+function d(n, decimals) {
+  if (n == null || isNaN(n)) return '';
+  return parseFloat(n.toFixed(decimals)).toString();
+}
+const d4  = n => d(n, 4);
+const d6  = n => d(n, 6);
+const d2  = n => d(n, 2);
+const d0  = n => n == null || isNaN(n) ? '' : String(Math.round(n));
+const loc = n => n == null || isNaN(n) ? '—' :
+  Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-function parseNum(str) {
-  // Acepta comas como separadores de miles
-  const clean = String(str).replace(/,/g, '');
-  const v = parseFloat(clean);
-  return isNaN(v) ? null : v;
+function parseNum(v) {
+  const n = parseFloat(String(v).replace(/,/g, ''));
+  return isNaN(n) ? null : n;
 }
 
 // ── Estado central ─────────────────────────────────────────────────────────
-
 const state = {
-  // Inputs
-  direction: 'buy',
-  currencyPair: 'USDMXN',
-  baseCcy: 'USD',
-  quoteCcy: 'MXN',
-  notionalBase: 1_000_000,
-  tradeDate: Engine.todayStr(),
-  valueDate: Engine.addDays(Engine.todayStr(), 90),
-  days: 90,
-  spot: 17.00,
-  rateBase: 5.00,   // almacenado como porcentaje (5.00 = 5%)
-  rateQuote: 11.00,
-  dayCount: 360,
+  direction:     'buy',
+  currencyPair:  'USDMXN',
+  baseCcy:       'USD',
+  quoteCcy:      'MXN',
+  notionalBase:  1_000_000,
+  tradeDate:     Engine.todayStr(),
+  valueDate:     null,     // se calcula en init
+  days:          90,
+  spot:          17.00,
+  rateBase:      5.00,     // porcentaje (5.00 = 5%)
+  rateQuote:     11.00,
+  dayCount:      360,
 
   // Outputs calculados
-  forwardRate: null,
-  forwardPoints: null,
+  fwdRate:       null,
+  fwdPoints:     null,
   notionalQuote: null,
-  spotMarket: 17.00,  // spot para MTM; inicialmente = spot del contrato
-  npv: null,
+  spotMarket:    17.00,    // spot para MTM, inicialmente = spot del contrato
+  npv:           null,
 
-  // Qué outputs están bloqueados (editados manualmente por el usuario)
+  // Locks activos
   locked: new Set(),
 };
 
 // ── Referencias DOM ────────────────────────────────────────────────────────
-
 const $ = id => document.getElementById(id);
 
-const fields = {
-  direction:      $('f-direction'),
-  currencyPair:   $('f-pair'),
-  notionalBase:   $('f-notional-base'),
-  tradeDate:      $('f-trade-date'),
-  valueDate:      $('f-value-date'),
-  days:           $('f-days'),
-  spot:           $('f-spot'),
-  rateBase:       $('f-rate-base'),
-  rateQuote:      $('f-rate-quote'),
-  dayCount:       $('f-daycount'),
-  // outputs
-  forwardRate:    $('f-forward-rate'),
-  forwardPoints:  $('f-forward-points'),
-  notionalQuote:  $('f-notional-quote'),
-  spotMarket:     $('f-spot-market'),
-  npv:            $('f-npv'),
-};
+// ── Warning / error banner ─────────────────────────────────────────────────
+function warn(msg) {
+  $('warn-msg').textContent = msg;
+  $('warn-banner').classList.remove('hidden');
+}
+function clearWarn() {
+  $('warn-banner').classList.add('hidden');
+}
 
-// ── Lógica de bloqueo / desbloqueo ────────────────────────────────────────
+// ── DOM: escribir valor en un campo ────────────────────────────────────────
 
-function lock(fieldId) {
-  // forwardRate y forwardPoints son mutuamente excluyentes
-  if (fieldId === 'forwardRate')   state.locked.delete('forwardPoints');
-  if (fieldId === 'forwardPoints') state.locked.delete('forwardRate');
+// Escribe en campos de input normales (siempre)
+function setVal(id, v) {
+  const el = $(id);
+  if (el) el.value = v ?? '';
+}
 
-  state.locked.add(fieldId);
+// Escribe en campos output solo si NO están bloqueados
+function setOut(id, lockKey, formattedValue) {
+  if (state.locked.has(lockKey)) return;
+  setVal(id, formattedValue);
+}
+
+// ── Solved highlight en inputs que fueron despejados ──────────────────────
+function markSolved(id) {
+  const el = $(id);
+  if (el) el.classList.add('input--solved');
+}
+function clearSolved(id) {
+  const el = $(id);
+  if (el) el.classList.remove('input--solved');
+}
+
+// Texto de ayuda bajo los outputs
+function hint(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text || '';
+}
+
+// ── Locks ──────────────────────────────────────────────────────────────────
+// fwdRate y fwdPoints son mutuamente excluyentes (misma ecuación)
+const MUTUAL_EXCL = { fwdRate: 'fwdPoints', fwdPoints: 'fwdRate' };
+
+function lock(key) {
+  if (MUTUAL_EXCL[key]) state.locked.delete(MUTUAL_EXCL[key]);
+  state.locked.add(key);
   updateLockUI();
 }
 
-function unlock(fieldId) {
-  state.locked.delete(fieldId);
-  // Si se desbloquea un campo de precio, limpiar highlight del input que fue despejado
-  if (fieldId === 'forwardRate' || fieldId === 'forwardPoints') {
-    clearSolvedHighlight('rateQuote');
-    clearSolvedHighlight('f-rate-quote');
-  }
-  if (fieldId === 'notionalQuote') clearSolvedHighlight('notionalBase');
-  if (fieldId === 'npv')           clearSolvedHighlight('spotMarket');
+function unlock(key) {
+  state.locked.delete(key);
+  // Limpiar highlight del campo despejado
+  if (key === 'fwdRate' || key === 'fwdPoints') clearSolved('f-rate-quote');
+  if (key === 'notionalQuote') clearSolved('f-notional-base');
+  if (key === 'npv') clearSolved('f-spot-market');
   updateLockUI();
   recalc();
 }
 
 function unlockAll() {
   state.locked.clear();
-  ['rateQuote', 'notionalBase', 'spotMarket'].forEach(clearSolvedHighlight);
+  ['f-rate-quote', 'f-notional-base', 'f-spot-market'].forEach(clearSolved);
   updateLockUI();
 }
 
 function updateLockUI() {
+  // Lock buttons: mostrar solo si el campo está bloqueado
   document.querySelectorAll('.lock-btn').forEach(btn => {
     const key = btn.dataset.lock;
-    const isLocked = state.locked.has(key);
-    btn.classList.toggle('hidden', !isLocked);
-    if (fields[key]) {
-      fields[key].classList.toggle('output-input--locked', isLocked);
-    }
+    const locked = state.locked.has(key);
+    btn.classList.toggle('hidden', !locked);
+
+    // Estilo del output field correspondiente
+    const inputId = {
+      fwdRate:       'f-fwd-rate',
+      fwdPoints:     'f-fwd-points',
+      notionalQuote: 'f-notional-quote',
+      npv:           'f-npv',
+    }[key];
+    if (inputId) $(inputId)?.classList.toggle('price-val--locked', locked);
   });
-  // forwardRate y forwardPoints comparten el mismo solve target
-  if (state.locked.has('forwardRate') || state.locked.has('forwardPoints')) {
-    showSolveHint('forward-rate',   state.locked.has('forwardRate')   ? 'fijado por ti' : '');
-    showSolveHint('forward-points', state.locked.has('forwardPoints') ? 'fijado por ti' : '');
-  } else {
-    showSolveHint('forward-rate', '');
-    showSolveHint('forward-points', '');
-  }
+
+  // spotMarket: readonly si npv está bloqueado
+  const smEl = $('f-spot-market');
+  if (smEl) smEl.readOnly = state.locked.has('npv');
 }
 
-function showSolveHint(fieldSuffix, msg) {
-  const el = $('hint-' + fieldSuffix);
-  if (el) el.textContent = msg;
-}
-
-// ── Highlight de inputs que fueron despejados ─────────────────────────────
-
-function markSolvedInput(inputId, reason) {
-  const el = fields[inputId] || $(inputId);
-  if (!el) return;
-  el.classList.add('input--solved');
-  el.title = `Despejado porque "${reason}" está bloqueado`;
-}
-
-function clearSolvedHighlight(inputId) {
-  const el = fields[inputId] || $(inputId);
-  if (!el) return;
-  el.classList.remove('input--solved');
-  el.title = '';
-}
-
-// ── Escritura de valores en el DOM ────────────────────────────────────────
-
-function setField(id, value) {
-  const el = fields[id];
-  if (!el) return;
-  if (el.tagName === 'SELECT') {
-    el.value = value;
-  } else if (el.type === 'date') {
-    el.value = value || '';
-  } else {
-    el.value = value != null ? value : '';
-  }
-}
-
-function setOutputDisplay(id, formatted) {
-  const el = fields[id];
-  if (!el || state.locked.has(id)) return; // no sobreescribir si está bloqueado
-  el.value = formatted;
-}
-
-// ── Cálculo central (recalc) ──────────────────────────────────────────────
-
+// ── Cálculo central ────────────────────────────────────────────────────────
 function recalc() {
+  clearWarn();
+
   const rb = state.rateBase  / 100;
   const rq = state.rateQuote / 100;
   const { spot, days, dayCount, notionalBase, spotMarket, direction } = state;
 
-  // ── Paso 1: determinar Forward Rate ──────────────────────────────────────
-  let F;
+  // Validaciones básicas
+  if (!spot || spot <= 0)           { warn('El Spot Rate debe ser mayor que cero.'); return; }
+  if (!days || days <= 0)           { warn('Los días al vencimiento deben ser > 0.'); return; }
+  if (!notionalBase || notionalBase <= 0) { warn('El Nocional debe ser mayor que cero.'); return; }
 
-  if (state.locked.has('forwardRate')) {
-    F = state.forwardRate;
-    // Despejar rateQuote
-    const rq_new = Engine.impliedRateQuote(F, spot, rb, days, dayCount);
-    state.rateQuote = rq_new * 100;
-    setField('rateQuote', fmt4(state.rateQuote));
-    markSolvedInput('rateQuote', 'Forward Rate');
-    // Actualizar forwardPoints (no está bloqueado en este caso)
-    state.forwardPoints = Engine.forwardPoints(F, spot);
-    setOutputDisplay('forwardPoints', fmt6(state.forwardPoints));
-    showSolveHint('forward-rate', 'fijado · despeja Tasa ' + state.quoteCcy);
+  // ── Paso 1: Forward Rate ─────────────────────────────────────────────────
+  let F = null;
 
-  } else if (state.locked.has('forwardPoints')) {
-    F = spot + state.forwardPoints;
-    state.forwardRate = F;
-    // Despejar rateQuote
+  if (state.locked.has('fwdRate')) {
+    F = state.fwdRate;
+    if (!F || F <= 0) { warn('Forward Rate bloqueado tiene valor inválido.'); return; }
+
     const rq_new = Engine.impliedRateQuote(F, spot, rb, days, dayCount);
-    state.rateQuote = rq_new * 100;
-    setField('rateQuote', fmt4(state.rateQuote));
-    markSolvedInput('rateQuote', 'Forward Points');
-    setOutputDisplay('forwardRate', fmt6(state.forwardRate));
-    showSolveHint('forward-points', 'fijado · despeja Tasa ' + state.quoteCcy);
+    if (rq_new === null) {
+      warn('No se puede despejar la Tasa cotizada con esos valores. Verifica el Forward Rate.');
+    } else {
+      if (rq_new < -0.5 || rq_new > 5) {
+        warn(`Tasa ${state.quoteCcy} implícita (${d2(rq_new * 100)}%) está fuera de rango razonable.`);
+      }
+      state.rateQuote = rq_new * 100;
+      setVal('f-rate-quote', d4(state.rateQuote));
+      markSolved('f-rate-quote');
+    }
+    // Actualizar forward points (no está bloqueado en este caso)
+    state.fwdPoints = Engine.forwardPoints(F, spot);
+    setOut('f-fwd-points', 'fwdPoints', d4(state.fwdPoints));
+    hint('hint-fwd-rate',   `Fijado → despeja Tasa ${state.quoteCcy}`);
+    hint('hint-fwd-points', '');
+
+  } else if (state.locked.has('fwdPoints')) {
+    if (state.fwdPoints == null) { warn('Forward Points no tiene valor válido.'); return; }
+    F = spot + state.fwdPoints;
+    state.fwdRate = F;
+    if (F <= 0) { warn('Forward Points implica un Forward Rate negativo. Inválido.'); return; }
+
+    const rq_new = Engine.impliedRateQuote(F, spot, rb, days, dayCount);
+    if (rq_new === null) {
+      warn('No se puede despejar la Tasa cotizada con esos valores.');
+    } else {
+      if (rq_new < -0.5 || rq_new > 5) {
+        warn(`Tasa ${state.quoteCcy} implícita (${d2(rq_new * 100)}%) está fuera de rango razonable.`);
+      }
+      state.rateQuote = rq_new * 100;
+      setVal('f-rate-quote', d4(state.rateQuote));
+      markSolved('f-rate-quote');
+    }
+    setOut('f-fwd-rate', 'fwdRate', d4(state.fwdRate));
+    hint('hint-fwd-points', `Fijado → despeja Tasa ${state.quoteCcy}`);
+    hint('hint-fwd-rate',   '');
 
   } else {
-    // Flujo normal: calcular F desde los inputs
+    // Flujo normal
     F = Engine.forwardRate(spot, rb, rq, days, dayCount);
-    state.forwardRate   = F;
-    state.forwardPoints = Engine.forwardPoints(F, spot);
-    setOutputDisplay('forwardRate',   fmt6(state.forwardRate));
-    setOutputDisplay('forwardPoints', fmt6(state.forwardPoints));
-    clearSolvedHighlight('rateQuote');
-    showSolveHint('forward-rate', '');
-    showSolveHint('forward-points', '');
+    if (F === null) { warn('Error en el cálculo del Forward Rate. Revisa los datos de entrada.'); return; }
+
+    state.fwdRate   = F;
+    state.fwdPoints = Engine.forwardPoints(F, spot);
+    setVal('f-fwd-rate',   d4(state.fwdRate));
+    setVal('f-fwd-points', d4(state.fwdPoints));
+    clearSolved('f-rate-quote');
+    hint('hint-fwd-rate',   '');
+    hint('hint-fwd-points', '');
   }
 
-  // ── Paso 2: nocionales ───────────────────────────────────────────────────
-  let N_base, N_quote;
+  // ── Paso 2: Nocionales ───────────────────────────────────────────────────
+  let Nb, Nq;
 
   if (state.locked.has('notionalQuote')) {
-    N_quote = state.notionalQuote;
-    N_base  = Engine.notionalBase(N_quote, F);
-    state.notionalBase = N_base;
-    setField('notionalBase', fmt0(N_base));
-    markSolvedInput('notionalBase', 'Nocional ' + state.quoteCcy);
-    showSolveHint('notional-quote', 'fijado · despeja Nocional ' + state.baseCcy);
+    Nq = state.notionalQuote;
+    if (!Nq || Nq <= 0) { warn('Nocional cotizado bloqueado tiene valor inválido.'); return; }
+
+    Nb = Engine.notionalBase(Nq, F);
+    if (Nb === null) {
+      warn('No se puede calcular el Nocional base. Verifica el Forward Rate.');
+    } else {
+      state.notionalBase = Nb;
+      setVal('f-notional-base', d0(Nb));
+      markSolved('f-notional-base');
+      hint('hint-notional-quote', `Fijado → despeja Nocional ${state.baseCcy}`);
+    }
   } else {
-    N_base  = notionalBase;
-    N_quote = Engine.notionalQuote(N_base, F);
-    state.notionalQuote = N_quote;
-    setOutputDisplay('notionalQuote', fmt0(N_quote));
-    clearSolvedHighlight('notionalBase');
-    showSolveHint('notional-quote', '');
+    Nb = notionalBase;
+    Nq = Engine.notionalQuote(Nb, F);
+    state.notionalQuote = Nq;
+    setVal('f-notional-quote', d0(Nq));
+    clearSolved('f-notional-base');
+    hint('hint-notional-quote', '');
   }
 
   // ── Paso 3: NPV / MTM ────────────────────────────────────────────────────
   if (state.locked.has('npv')) {
-    const S_mkt = Engine.impliedSpotMarket(
-      state.npv, N_base, F, rb, rq, days, dayCount, direction
+    const Smkt = Engine.impliedSpotMarket(
+      state.npv, Nb, F, rb, rq, days, dayCount, direction
     );
-    state.spotMarket = S_mkt;
-    setOutputDisplay('spotMarket', fmt6(S_mkt));
-    markSolvedInput('spotMarket', 'NPV');
-    showSolveHint('npv', 'fijado · despeja Spot mercado');
+    if (Smkt === null) {
+      warn('El NPV ingresado implica un Spot de mercado imposible (negativo o incalculable).');
+    } else {
+      state.spotMarket = Smkt;
+      setVal('f-spot-market', d4(Smkt));
+      markSolved('f-spot-market');
+      hint('hint-npv', 'Fijado → despeja Spot mercado');
+    }
   } else {
-    const npv_val = Engine.npv(N_base, state.spotMarket, F, rb, rq, days, dayCount, direction);
+    const SM = state.spotMarket && state.spotMarket > 0 ? state.spotMarket : spot;
+    const npv_val = Engine.npv(Nb, SM, F, rb, rq, days, dayCount, direction);
     state.npv = npv_val;
-    setOutputDisplay('npv', fmt2(npv_val));
-    clearSolvedHighlight('spotMarket');
-    showSolveHint('npv', '');
+    setVal('f-npv', d2(npv_val));
+    clearSolved('f-spot-market');
+    hint('hint-npv', '');
   }
 
-  // ── Paso 4: actualizar UI derivada ───────────────────────────────────────
-  updateCashflow(F, N_base, N_quote, direction);
-  updateFormulaBox(spot, rb, rq, days, dayCount, F);
+  // ── Paso 4: UI derivada ──────────────────────────────────────────────────
+  const N_display_base  = Nb  ?? notionalBase;
+  const N_display_quote = Nq  ?? Engine.notionalQuote(N_display_base, F) ?? 0;
+
+  updateCashflow(N_display_base, N_display_quote, direction);
+  updateFormula(spot, rb, rq, days, dayCount, F);
   updateNPVColor();
 }
 
-// ── Cashflow visual ───────────────────────────────────────────────────────
-
-function updateCashflow(F, N_base, N_quote, direction) {
-  // direction = 'buy' → compras base (recibes base, pagas quote)
-  const isBuy = direction === 'buy';
-  const payAmt  = isBuy ? fmt0(N_quote)  : fmt0(N_base);
+// ── Cashflow visual ────────────────────────────────────────────────────────
+function updateCashflow(Nb, Nq, dir) {
+  const isBuy = dir === 'buy';
+  const payAmt  = loc(isBuy ? Nq : Nb);
   const payCcy  = isBuy ? state.quoteCcy : state.baseCcy;
-  const recvAmt = isBuy ? fmt0(N_base)   : fmt0(N_quote);
+  const recvAmt = loc(isBuy ? Nb : Nq);
   const recvCcy = isBuy ? state.baseCcy  : state.quoteCcy;
 
   $('cf-pay-amount').textContent  = payAmt;
@@ -275,215 +290,240 @@ function updateCashflow(F, N_base, N_quote, direction) {
   $('cf-recv-ccy').textContent    = recvCcy;
 }
 
-// ── Fórmula CIP visual ───────────────────────────────────────────────────
-
-function updateFormulaBox(S, rb, rq, d, dc, F) {
+// ── Fórmula ────────────────────────────────────────────────────────────────
+function updateFormula(S, rb, rq, d, dc, F) {
   const b = state.baseCcy, q = state.quoteCcy;
-  $('formula-math').innerHTML =
+  $('formula-symbolic').innerHTML =
     `F = S &times; (1 + r<sub>${q}</sub> &times; d/${dc}) / (1 + r<sub>${b}</sub> &times; d/${dc})`;
 
   const t = d / dc;
-  $('formula-substituted').innerHTML =
-    `${fmt4(F)} = ${fmt4(S)} &times; ` +
-    `(1 + ${fmt4(rq)} &times; ${d}/${dc}) / ` +
-    `(1 + ${fmt4(rb)} &times; ${d}/${dc})` +
-    ` = ${fmt4(S)} &times; ${fmt6(1 + rq * t)} / ${fmt6(1 + rb * t)}`;
+  $('formula-numeric').innerHTML =
+    `${d4(F)} = ${d4(S)} &times; ` +
+    `(1 + ${d4(rq)} &times; ${d}/${dc}) / (1 + ${d4(rb)} &times; ${d}/${dc})` +
+    `&nbsp;&nbsp;=&nbsp;&nbsp;` +
+    `${d4(S)} &times; ${d6(1 + rq * t)} / ${d6(1 + rb * t)}`;
 }
 
-// ── NPV color (verde/rojo) ────────────────────────────────────────────────
-
+// ── Color NPV ──────────────────────────────────────────────────────────────
 function updateNPVColor() {
-  const el = fields.npv;
+  const el = $('f-npv');
   if (!el) return;
-  el.classList.toggle('output-input--positive', state.npv > 0.005);
-  el.classList.toggle('output-input--negative', state.npv < -0.005);
+  el.classList.toggle('price-val--positive', (state.npv ?? 0) > 0.5);
+  el.classList.toggle('price-val--negative', (state.npv ?? 0) < -0.5);
 }
 
-// ── Sincronizar días ↔ fechas ────────────────────────────────────────────
-
-function syncDatesFromDays(newDays) {
-  state.days = Math.round(newDays);
+// ── Sincronización días ↔ fechas ───────────────────────────────────────────
+function applyDays(n) {
+  state.days = Math.round(n);
   state.valueDate = Engine.addDays(state.tradeDate, state.days);
-  setField('valueDate', state.valueDate);
+  setVal('f-value-date', state.valueDate);
 }
 
-function syncDaysFromDates() {
+function applyDatesCalc() {
   const d = Engine.daysBetween(state.tradeDate, state.valueDate);
-  if (d > 0) {
+  if (d !== null && d > 0) {
     state.days = d;
-    setField('days', state.days);
+    setVal('f-days', d0(d));
+  } else {
+    warn('La fecha valor debe ser posterior a la fecha trade.');
   }
 }
 
-// ── Cambio de par de divisas ─────────────────────────────────────────────
-
+// ── Aplicar par de divisas ─────────────────────────────────────────────────
 function applyPair(pairId) {
   const pair = Loader.getPair(pairId);
   state.baseCcy  = pair.base;
   state.quoteCcy = pair.quote;
-  state.spot        = pair.spotDefault;
-  state.spotMarket  = pair.spotDefault;
-  state.rateBase    = pair.rateBaseDefault;
-  state.rateQuote   = pair.rateQuoteDefault;
+  state.spot         = pair.spotDefault;
+  state.spotMarket   = pair.spotDefault;
+  state.rateBase     = pair.rateBaseDefault;
+  state.rateQuote    = pair.rateQuoteDefault;
 
-  setField('spot',      pair.spotDefault);
-  setField('rateBase',  pair.rateBaseDefault);
-  setField('rateQuote', pair.rateQuoteDefault);
+  setVal('f-spot',        d4(pair.spotDefault));
+  setVal('f-spot-market', d4(pair.spotDefault));
+  setVal('f-rate-base',   d4(pair.rateBaseDefault));
+  setVal('f-rate-quote',  d4(pair.rateQuoteDefault));
 
   // Actualizar labels de monedas
-  document.querySelectorAll('.dyn-label[id]').forEach(el => {
-    if (el.id === 'lbl-base'      || el.id === 'lbl-rate-base') el.textContent = pair.base;
-    if (el.id === 'lbl-quote'     || el.id === 'lbl-rate-quote') el.textContent = pair.quote;
-    if (el.id === 'lbl-pair-spot') el.textContent = pairId;
-    if (el.id === 'lbl-npv-ccy')  el.textContent = pair.quote;
+  document.querySelectorAll('#lbl-base').forEach(el => el.textContent = pair.base);
+  document.querySelectorAll('#lbl-quote').forEach(el => el.textContent = pair.quote);
+  $('lbl-rate-base').textContent  = pair.base;
+  $('lbl-rate-quote').textContent = pair.quote;
+  $('lbl-npv-ccy').textContent    = pair.quote;
+  $('lbl-pair-inline').textContent = `(${pairId.slice(0,3)}/${pairId.slice(3)})`;
+}
+
+// ── Dirección del ticket ───────────────────────────────────────────────────
+function applyDirection(dir) {
+  state.direction = dir;
+  const ticket = $('ticket');
+  ticket.classList.toggle('ticket--buy',  dir === 'buy');
+  ticket.classList.toggle('ticket--sell', dir === 'sell');
+  document.querySelectorAll('.dir-btn').forEach(btn => {
+    btn.classList.toggle('dir-btn--active', btn.dataset.dir === dir);
   });
 }
 
-// ── Inicialización ────────────────────────────────────────────────────────
-
+// ── Inicialización ─────────────────────────────────────────────────────────
 async function init() {
   const config = await Loader.load('forward-fx');
   await Dictionary.load();
   Dictionary.init();
 
-  // Rellenar selector de pares
+  // Rellenar select de pares
   config.currencyPairs.forEach(p => {
     const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = `${p.id} (${p.base}/${p.quote})`;
-    fields.currencyPair.appendChild(opt);
+    opt.value       = p.id;
+    opt.textContent = `${p.id.slice(0,3)}/${p.id.slice(3)}`;
+    $('f-pair').appendChild(opt);
   });
+  $('f-pair').value = state.currencyPair;
+
+  // Calcular valueDate inicial
+  state.valueDate = Engine.addDays(state.tradeDate, state.days);
 
   // Valores iniciales en DOM
-  setField('direction',    state.direction);
-  setField('currencyPair', state.currencyPair);
-  setField('notionalBase', fmt0(state.notionalBase));
-  setField('tradeDate',    state.tradeDate);
-  setField('valueDate',    state.valueDate);
-  setField('days',         state.days);
-  setField('dayCount',     state.dayCount);
+  applyDirection(state.direction);
   applyPair(state.currencyPair);
+  setVal('f-notional-base', d0(state.notionalBase));
+  setVal('f-trade-date',    state.tradeDate);
+  setVal('f-value-date',    state.valueDate);
+  setVal('f-days',          d0(state.days));
+  setVal('f-daycount',      String(state.dayCount));
+
+  // ⚠️ IMPORTANTE: inicializar spotMarket en DOM explícitamente
+  setVal('f-spot-market', d4(state.spotMarket));
 
   // Primer cálculo
   recalc();
 
-  // ── Event listeners ──────────────────────────────────────────────────────
+  // ── Event listeners ────────────────────────────────────────────────────
 
-  // Inputs normales
-  fields.direction.addEventListener('change', e => {
-    state.direction = e.target.value;
+  // Dirección (toggle buttons)
+  $('dir-toggle').addEventListener('click', e => {
+    const btn = e.target.closest('.dir-btn');
+    if (!btn) return;
+    applyDirection(btn.dataset.dir);
     recalc();
   });
 
-  fields.currencyPair.addEventListener('change', e => {
+  // Par de divisas
+  $('f-pair').addEventListener('change', e => {
     state.currencyPair = e.target.value;
     unlockAll();
     applyPair(state.currencyPair);
     recalc();
   });
 
-  fields.notionalBase.addEventListener('input', e => {
+  // Nocional base (INPUT normal)
+  $('f-notional-base').addEventListener('input', e => {
     const v = parseNum(e.target.value);
     if (v != null && v > 0) { state.notionalBase = v; recalc(); }
   });
 
-  fields.tradeDate.addEventListener('change', e => {
+  // Fecha trade
+  $('f-trade-date').addEventListener('change', e => {
     state.tradeDate = e.target.value;
-    syncDaysFromDates();
+    applyDatesCalc();
     recalc();
   });
 
-  fields.valueDate.addEventListener('change', e => {
+  // Fecha valor
+  $('f-value-date').addEventListener('change', e => {
     state.valueDate = e.target.value;
-    syncDaysFromDates();
+    applyDatesCalc();
     recalc();
   });
 
-  fields.days.addEventListener('input', e => {
+  // Días (bidireccional con fecha valor)
+  $('f-days').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null && v > 0) {
-      syncDatesFromDays(v);
-      recalc();
-    }
+    if (v != null && v > 0) { applyDays(v); recalc(); }
   });
 
-  fields.spot.addEventListener('input', e => {
+  // Spot
+  $('f-spot').addEventListener('input', e => {
     const v = parseNum(e.target.value);
     if (v != null && v > 0) { state.spot = v; recalc(); }
   });
 
-  fields.rateBase.addEventListener('input', e => {
+  // Tasa base
+  $('f-rate-base').addEventListener('input', e => {
     const v = parseNum(e.target.value);
     if (v != null) { state.rateBase = v; recalc(); }
   });
 
-  fields.rateQuote.addEventListener('input', e => {
+  // Tasa cotizada
+  $('f-rate-quote').addEventListener('input', e => {
     const v = parseNum(e.target.value);
     if (v != null) { state.rateQuote = v; recalc(); }
   });
 
-  fields.dayCount.addEventListener('change', e => {
+  // Convención días
+  $('f-daycount').addEventListener('change', e => {
     state.dayCount = parseInt(e.target.value, 10);
     recalc();
   });
 
-  // Outputs: detectar edición manual → bloquear y recalcular
-  function attachOutputListener(fieldId, parseAndStore) {
-    fields[fieldId].addEventListener('focus', () => {
-      fields[fieldId].select();
-    });
-    fields[fieldId].addEventListener('input', e => {
+  // ── Outputs bloqueables ──────────────────────────────────────────────────
+  // Al editar un output → se bloquea y se recalcula
+
+  function bindOutput(id, lockKey, parseAndStore) {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener('focus', () => el.select?.());
+    el.addEventListener('input', e => {
       const v = parseNum(e.target.value);
       if (v == null) return;
       parseAndStore(v);
-      lock(fieldId);
+      lock(lockKey);
       recalc();
     });
   }
 
-  attachOutputListener('forwardRate', v => { state.forwardRate = v; });
-  attachOutputListener('forwardPoints', v => { state.forwardPoints = v; });
-  attachOutputListener('notionalQuote', v => { state.notionalQuote = v; });
-  attachOutputListener('npv', v => { state.npv = v; });
+  bindOutput('f-fwd-rate',       'fwdRate',       v => { state.fwdRate   = v; });
+  bindOutput('f-fwd-points',     'fwdPoints',     v => { state.fwdPoints = v; });
+  bindOutput('f-notional-quote', 'notionalQuote', v => { state.notionalQuote = v; });
+  bindOutput('f-npv',            'npv',           v => { state.npv = v; });
 
-  // spotMarket: editable libre (no bloquea, sólo recalcula NPV)
-  fields.spotMarket.addEventListener('input', e => {
+  // Spot mercado: libre (no bloquea, solo recalcula NPV)
+  $('f-spot-market').addEventListener('focus', () => $('f-spot-market').select?.());
+  $('f-spot-market').addEventListener('input', e => {
+    if (state.locked.has('npv')) return;  // si NPV está bloqueado, ignorar
     const v = parseNum(e.target.value);
-    if (v != null && v > 0 && !state.locked.has('npv')) {
-      state.spotMarket = v;
-      recalc();
-    }
+    if (v != null && v > 0) { state.spotMarket = v; recalc(); }
   });
-  fields.spotMarket.addEventListener('focus', () => fields.spotMarket.select());
 
-  // Botones de desbloqueo
+  // ── Botones de desbloqueo ────────────────────────────────────────────────
   document.querySelectorAll('.lock-btn').forEach(btn => {
     btn.addEventListener('click', () => unlock(btn.dataset.lock));
   });
 
-  // Resetear todo
+  // ── Resetear ─────────────────────────────────────────────────────────────
   $('btn-reset').addEventListener('click', () => {
     unlockAll();
-    applyPair(state.currencyPair);
-    state.direction   = config.defaults.direction;
-    state.notionalBase = config.defaults.notionalBase;
-    state.days        = config.defaults.days;
-    state.dayCount    = config.defaults.dayCount;
-    state.tradeDate   = Engine.todayStr();
-    state.valueDate   = Engine.addDays(state.tradeDate, state.days);
-    state.spotMarket  = state.spot;
+    clearWarn();
 
-    setField('direction',    state.direction);
-    setField('notionalBase', fmt0(state.notionalBase));
-    setField('days',         state.days);
-    setField('dayCount',     state.dayCount);
-    setField('tradeDate',    state.tradeDate);
-    setField('valueDate',    state.valueDate);
-    setField('spotMarket',   fmt6(state.spotMarket));
+    const pair = Loader.getPair(state.currencyPair);
+    state.direction    = config.defaults.direction;
+    state.notionalBase = config.defaults.notionalBase;
+    state.days         = config.defaults.days;
+    state.dayCount     = config.defaults.dayCount;
+    state.tradeDate    = Engine.todayStr();
+    state.valueDate    = Engine.addDays(state.tradeDate, state.days);
+    state.spotMarket   = pair.spotDefault;
+
+    applyDirection(state.direction);
+    setVal('f-notional-base', d0(state.notionalBase));
+    setVal('f-days',          d0(state.days));
+    setVal('f-daycount',      String(state.dayCount));
+    setVal('f-trade-date',    state.tradeDate);
+    setVal('f-value-date',    state.valueDate);
+    setVal('f-spot-market',   d4(state.spotMarket));
+    applyPair(state.currencyPair);
 
     recalc();
   });
 }
 
-// Arrancar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init);

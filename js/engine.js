@@ -1,100 +1,136 @@
 /**
- * Motor de cálculo puro para Forward FX.
- * Todas las funciones son puras (sin efectos en DOM).
+ * Motor de cálculo puro — Forward FX.
+ * Covered Interest Rate Parity (CIP):  F = S × (1 + r_q × t) / (1 + r_b × t)
+ * Todas las funciones devuelven null cuando el resultado es inválido.
  * Tasas se reciben como decimales (0.05 = 5%).
- * Fórmula base: Covered Interest Rate Parity (CIP)
- *   F = S × (1 + r_q × t) / (1 + r_b × t)   donde t = days / dayCount
  */
-const Engine = {
+const Engine = (() => {
 
-  // ── Forward Rate ───────────────────────────────────────────────────────────
+  // Devuelve null si el resultado no es un número finito
+  function safe(n) {
+    return (n !== null && n !== undefined && isFinite(n) && !isNaN(n)) ? n : null;
+  }
 
-  forwardRate(S, rb, rq, days, dc) {
-    const t = days / dc;
-    return S * (1 + rq * t) / (1 + rb * t);
-  },
+  // Valida que todos los argumentos son números finitos positivos (o no negativos)
+  function ok(...args) {
+    return args.every(v => v !== null && v !== undefined && isFinite(v) && !isNaN(v));
+  }
 
-  forwardPoints(F, S) {
-    return F - S;
-  },
+  return {
 
-  // ── Despejes de CIP ────────────────────────────────────────────────────────
+    // ── Forward Rate ────────────────────────────────────────────────────────
+    forwardRate(S, rb, rq, days, dc) {
+      if (!ok(S, rb, rq, days, dc) || S <= 0 || days <= 0 || dc <= 0) return null;
+      const t = days / dc;
+      const denom = 1 + rb * t;
+      if (Math.abs(denom) < 1e-12) return null;
+      return safe(S * (1 + rq * t) / denom);
+    },
 
-  // Dado F, despejar tasa de la moneda cotizada (r_q)
-  impliedRateQuote(F, S, rb, days, dc) {
-    const t = days / dc;
-    return ((F / S) * (1 + rb * t) - 1) / t;
-  },
+    forwardPoints(F, S) {
+      if (!ok(F, S)) return null;
+      return safe(F - S);
+    },
 
-  // Dado F, despejar tasa de la moneda base (r_b)
-  impliedRateBase(F, S, rq, days, dc) {
-    const t = days / dc;
-    return ((S / F) * (1 + rq * t) - 1) / t;
-  },
+    // ── Despejes algebraicos de CIP ─────────────────────────────────────────
 
-  // Dado F, despejar spot (S)
-  impliedSpot(F, rb, rq, days, dc) {
-    const t = days / dc;
-    return F * (1 + rb * t) / (1 + rq * t);
-  },
+    // Dado F, despejar tasa cotizada (r_q)
+    // r_q = [ (F/S) × (1 + rb×t) − 1 ] / t
+    impliedRateQuote(F, S, rb, days, dc) {
+      if (!ok(F, S, rb, days, dc) || S <= 0 || F <= 0 || days <= 0 || dc <= 0) return null;
+      const t = days / dc;
+      if (Math.abs(t) < 1e-12) return null;
+      return safe(((F / S) * (1 + rb * t) - 1) / t);
+    },
 
-  // Dado F, despejar días
-  // F(1 + rb·t) = S(1 + rq·t)  =>  t = (S - F) / (F·rb - S·rq)
-  impliedDays(F, S, rb, rq, dc) {
-    const den = F * rb - S * rq;
-    if (Math.abs(den) < 1e-12) return null;
-    return ((S - F) / den) * dc;
-  },
+    // Dado F, despejar tasa base (r_b)
+    // r_b = [ (S/F) × (1 + rq×t) − 1 ] / t
+    impliedRateBase(F, S, rq, days, dc) {
+      if (!ok(F, S, rq, days, dc) || S <= 0 || F <= 0 || days <= 0 || dc <= 0) return null;
+      const t = days / dc;
+      if (Math.abs(t) < 1e-12) return null;
+      return safe(((S / F) * (1 + rq * t) - 1) / t);
+    },
 
-  // ── Nocionales ────────────────────────────────────────────────────────────
+    // Dado F, despejar spot
+    // S = F × (1 + rb×t) / (1 + rq×t)
+    impliedSpot(F, rb, rq, days, dc) {
+      if (!ok(F, rb, rq, days, dc) || F <= 0 || days <= 0 || dc <= 0) return null;
+      const t = days / dc;
+      const denom = 1 + rq * t;
+      if (Math.abs(denom) < 1e-12) return null;
+      return safe(F * (1 + rb * t) / denom);
+    },
 
-  notionalQuote(notionalBase, F) {
-    return notionalBase * F;
-  },
+    // Dado F, despejar días
+    // t = (S − F) / (F×rb − S×rq)   →   days = t × dc
+    impliedDays(F, S, rb, rq, dc) {
+      if (!ok(F, S, rb, rq, dc) || S <= 0 || F <= 0 || dc <= 0) return null;
+      const den = F * rb - S * rq;
+      if (Math.abs(den) < 1e-12) return null;  // r_b ≈ r_q: indeterminado
+      const t = (S - F) / den;
+      return safe(t * dc);
+    },
 
-  notionalBase(notionalQuote, F) {
-    return notionalQuote / F;
-  },
+    // ── Nocionales ──────────────────────────────────────────────────────────
 
-  // ── NPV (Mark-to-Market) ──────────────────────────────────────────────────
-  //
-  // Valora el contrato forward usando un spot de mercado actual (puede diferir
-  // del spot original). Para posición larga (buy base):
-  //   NPV = N_base × [ S_mkt / (1 + rb·t)  −  F_contract / (1 + rq·t) ]
-  //
-  // Al inicio S_mkt = S_trade → NPV = 0 por construcción (precio justo).
+    notionalQuote(Nb, F) {
+      if (!ok(Nb, F) || F <= 0 || Nb <= 0) return null;
+      return safe(Nb * F);
+    },
 
-  npv(notionalBase, spotMarket, fContract, rb, rq, days, dc, direction) {
-    const t = days / dc;
-    const pv_base  = spotMarket / (1 + rb * t);   // PV de recibir base, en cotizada
-    const pv_quote = fContract  / (1 + rq * t);   // PV de pagar cotizada, por unidad base
-    const sign = direction === 'buy' ? 1 : -1;
-    return sign * notionalBase * (pv_base - pv_quote);
-  },
+    notionalBase(Nq, F) {
+      if (!ok(Nq, F) || F <= 0 || Nq <= 0) return null;
+      return safe(Nq / F);
+    },
 
-  // Despejar S_mkt dado NPV
-  impliedSpotMarket(npv, notionalBase, fContract, rb, rq, days, dc, direction) {
-    const t = days / dc;
-    const sign = direction === 'buy' ? 1 : -1;
-    // npv = sign × N × (S/(1+rb·t) − F/(1+rq·t))
-    // S = ( npv/(sign·N) + F/(1+rq·t) ) × (1+rb·t)
-    const S_disc = npv / (sign * notionalBase) + fContract / (1 + rq * t);
-    return S_disc * (1 + rb * t);
-  },
+    // ── NPV (Mark-to-Market) ────────────────────────────────────────────────
+    //
+    // Para posición larga (buy base):
+    //   NPV = N_base × [ S_mkt/(1+rb·t)  −  F_contract/(1+rq·t) ]
+    //
+    // Al inicio S_mkt = S_trade, y por construcción del precio CIP:
+    //   S/(1+rb·t) = F/(1+rq·t)  →  NPV = 0
+    //
+    npv(Nb, Smkt, Fc, rb, rq, days, dc, dir) {
+      if (!ok(Nb, Smkt, Fc, rb, rq, days, dc) || Nb <= 0 || Smkt <= 0 || Fc <= 0 || days <= 0) return null;
+      const t = days / dc;
+      const pv_base  = Smkt / (1 + rb * t);
+      const pv_quote = Fc   / (1 + rq * t);
+      const sign = dir === 'buy' ? 1 : -1;
+      return safe(sign * Nb * (pv_base - pv_quote));
+    },
 
-  // ── Fechas ────────────────────────────────────────────────────────────────
+    // Despejar S_mkt desde NPV:
+    // S_mkt = [ npv/(sign×Nb) + Fc/(1+rq·t) ] × (1+rb·t)
+    impliedSpotMarket(npv, Nb, Fc, rb, rq, days, dc, dir) {
+      if (!ok(npv, Nb, Fc, rb, rq, days, dc) || Nb <= 0 || Fc <= 0 || days <= 0) return null;
+      const t = days / dc;
+      const sign = dir === 'buy' ? 1 : -1;
+      const S_disc = npv / (sign * Nb) + Fc / (1 + rq * t);
+      const result = S_disc * (1 + rb * t);
+      return result > 0 ? safe(result) : null;  // spot nunca puede ser negativo
+    },
 
-  daysBetween(d1, d2) {
-    return Math.round((new Date(d2) - new Date(d1)) / 86_400_000);
-  },
+    // ── Fechas ──────────────────────────────────────────────────────────────
 
-  addDays(dateStr, n) {
-    const d = new Date(dateStr);
-    d.setDate(d.getDate() + Math.round(n));
-    return d.toISOString().slice(0, 10);
-  },
+    daysBetween(d1, d2) {
+      if (!d1 || !d2) return null;
+      const diff = new Date(d2) - new Date(d1);
+      if (isNaN(diff)) return null;
+      return Math.round(diff / 86_400_000);
+    },
 
-  todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  },
-};
+    addDays(dateStr, n) {
+      if (!dateStr || !ok(n)) return null;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      d.setDate(d.getDate() + Math.round(n));
+      return d.toISOString().slice(0, 10);
+    },
+
+    todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    },
+  };
+})();
