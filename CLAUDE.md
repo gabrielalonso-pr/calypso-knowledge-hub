@@ -26,6 +26,37 @@ Por eso:
   3. Etiquetado de cada concepto como "específico de Calypso" o "transferible a otras plataformas financieras"
   4. Generación asistida por IA de una ficha de configuración del producto simulado, por temas de tiempo, la ficha de configuración se generará de forma externa con IA y se subirá al repositorio.
 
+## Editor XML de Trades (`xml-editor.html`)
+
+Herramienta para cargar, editar y exportar XMLs de trades de Calypso (formato CDUF).
+
+### Archivos
+- `xml-editor.html` — página completa full-screen con estilos inline
+- `js/xml-editor.js` — toda la lógica (parse, render, collect, export)
+
+### Modelo de datos interno
+Cada nodo del XML se representa como:
+- **Simple:** `{ tag, isGroup: false, values: string[] }` — soporta múltiples valores del mismo tag
+- **Grupo:** `{ tag, isGroup: true, instances: Node[][] }` — soporta múltiples instancias del bloque
+
+### Flujo principal
+1. Usuario sube XML → `parseXML()` → árbol de nodos → `renderForm()` → DOM
+2. Usuario edita → DOM con inputs `.xe-value-input` y grupos `.xe-group-instance`
+3. `getFormSchema()` → `collectSchema()` lee el DOM y reconstruye el árbol
+4. "Agregar registro" → push del árbol al array `savedRecords`
+5. "Exportar CDUF" → `buildXML(records)` → archivo descargable
+
+### Capacidades del formulario
+- **Campos simples repetibles:** botón `+` al lado de cada input agrega otro valor con el mismo tag
+- **Bloques repetibles:** botón `⊕ Duplicar` en el header de cada sección anidada clona el bloque con sus valores
+- **Eliminar instancias extras:** botón `✕` en bloques/valores agregados (el primero no se puede eliminar)
+- **Jerarquía visual:** 3 niveles de profundidad con colores distintos (azul oscuro → gris oscuro → gris claro)
+- **Limpiar valores:** vacía todos los inputs sin alterar la estructura
+- **Cargar registro:** recarga un registro guardado en el formulario para editarlo
+
+### Detección automática de estructura
+El parser detecta el tag raíz y el tag de segundo nivel automáticamente — funciona con cualquier XML, no solo `CalypsoUploadDocument/CalypsoTrade`.
+
 ## Git y Pull Requests
 - Al completar una tarea o feature, haz commit y push automáticamente a la 
   rama de la tarea sin pedirme confirmación para el push en sí.
