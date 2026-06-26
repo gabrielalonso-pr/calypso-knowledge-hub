@@ -61,8 +61,12 @@ El parser detecta el tag raíz y el tag de segundo nivel automáticamente — fu
 - Al completar una tarea o feature, haz commit y push automáticamente a la 
   rama de la tarea sin pedirme confirmación para el push en sí.
 - NO hagas push directo a `main`; siempre a la rama de la tarea/sesión.
-- Yo reviso y apruebo manualmente el Pull Request en GitHub — no necesitas 
-  preguntarme antes de subir los commits, solo evita tocar `main`.
+- Nombra las ramas con el formato: `feat/<descripcion-corta>` o `fix/<descripcion-corta>`.
+  Ejemplos: `feat/sidebar-diccionario`, `fix/calculo-npv`.
+- Al terminar el push, crea el Pull Request automáticamente con `mcp__github__create_pull_request`
+  apuntando a `main`. Incluye en el body: resumen, tabla de archivos modificados y checklist de pruebas.
+- Yo reviso y hago el merge manualmente — nunca hagas merge ni cierres el PR.
+- No me pidas confirmación para crear el PR; es parte del flujo normal de entrega.
 
 ## Forma de trabajar
 - Antes de codear una feature, resume el plan en 3-4 líneas y espera mi aprobación
