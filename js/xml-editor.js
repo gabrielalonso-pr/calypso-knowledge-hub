@@ -308,6 +308,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => errorBanner.classList.add('hidden'), 6000);
   }
 
+  const dropWrapper = document.getElementById('drop-wrapper');
+  const topbar      = document.getElementById('xe-topbar');
+  const lblTradeTag = document.getElementById('lbl-trade-tag');
+
+  function showEditor() {
+    dropWrapper.classList.add('hidden');
+    topbar.classList.remove('hidden');
+    editorArea.classList.remove('hidden');
+  }
+
+  function showDropZone() {
+    editorArea.classList.add('hidden');
+    topbar.classList.add('hidden');
+    dropWrapper.classList.remove('hidden');
+    dropZone.classList.remove('hidden');
+  }
+
   function loadFile(file) {
     if (!file || !file.name.toLowerCase().endsWith('.xml')) {
       showError('Por favor selecciona un archivo .xml válido.');
@@ -320,9 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
         savedRecords = [];
         renderForm(schema);
         updateRecordsSidebar();
-        editorArea.classList.remove('hidden');
-        dropZone.classList.add('hidden');
         document.getElementById('editor-filename').textContent = file.name;
+        lblTradeTag.textContent = tradeTag;
+        showEditor();
       } catch (err) { showError(err.message); }
     };
     reader.readAsText(file);
@@ -335,10 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
   dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('xe-drag-over'); loadFile(e.dataTransfer.files[0]); });
 
   document.getElementById('btn-change-file').addEventListener('click', () => {
-    editorArea.classList.add('hidden');
-    dropZone.classList.remove('hidden');
     fileInput.value = '';
     savedRecords = [];
+    showDropZone();
   });
 
   document.getElementById('btn-clear').addEventListener('click', clearValues);
