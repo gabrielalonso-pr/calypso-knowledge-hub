@@ -820,6 +820,68 @@ body.has-sidebar { overflow-x: hidden; }
 .nav-label { overflow: hidden; text-overflow: ellipsis; transition: opacity .15s; }
 .sidebar--collapsed .nav-label { opacity: 0; width: 0; }
 
+/* ── Nav sub-items (módulos del diccionario) ─────────────────────────── */
+.nav-sub {
+  overflow: hidden;
+  max-height: 300px;
+  transition: max-height .22s ease, opacity .22s ease;
+  opacity: 1;
+}
+.nav-sub.nav-sub--collapsed { max-height: 0; opacity: 0; }
+.sidebar--collapsed .nav-sub { display: none; }
+
+.nav-item--parent {
+  cursor: pointer;
+  user-select: none;
+}
+.nav-item--parent .nav-arrow {
+  margin-left: auto;
+  font-size: .65rem;
+  color: rgba(255,255,255,.35);
+  transition: transform .2s ease, opacity .15s;
+  flex-shrink: 0;
+}
+.nav-item--parent.collapsed .nav-arrow { transform: rotate(-90deg); }
+.sidebar--collapsed .nav-arrow { display: none; }
+
+.nav-subitem {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .35rem 1rem .35rem 2.4rem;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  font-size: .76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background .13s, color .13s;
+}
+.nav-subitem:hover  { background: var(--nav-hover); color: rgba(255,255,255,.85); }
+.nav-subitem.active { color: var(--white); font-weight: 600; }
+.nav-subitem-icon   { font-size: .75rem; flex-shrink: 0; }
+
+/* ── Dict module collapsible ─────────────────────────────────────────── */
+.dict-module-entries {
+  overflow: hidden;
+  max-height: 9999px;
+  transition: max-height .3s ease;
+}
+.dict-module.collapsed .dict-module-entries { max-height: 0; }
+
+.dict-module-toggle {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  font-size: .75rem;
+  padding: .15rem .3rem;
+  border-radius: var(--radius);
+  transition: color .13s, background .13s;
+  flex-shrink: 0;
+}
+.dict-module-toggle:hover { color: var(--gray-700); background: var(--gray-200); }
+
 .page-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .page-header {

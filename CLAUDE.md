@@ -71,7 +71,7 @@ El parser detecta el tag raíz y el tag de segundo nivel automáticamente — fu
   GitHub. Si el PR de la rama actual ya fue mergeado o cerrado, crea un nuevo PR.
 
 ## Forma de trabajar
-- Antes de codear una feature, resume el plan en 3-4 líneas y espera mi aprobación
+- SIEMPRE presenta el plan completo antes de escribir cualquier línea de código y espera confirmación explícita. No hay excepciones: ni para cambios pequeños, ni para bugs obvios, ni para ajustes de estilos.
 - Una feature por sesión/commit
 - Mensajes de commit en español, formato: tipo(alcance): descripción
 - Si algo financiero no está claro, pregunta antes de asumir
