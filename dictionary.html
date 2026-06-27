@@ -127,7 +127,8 @@
     localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
   }
 
-  setSidebarCollapsed(localStorage.getItem('sidebar_collapsed') === '1');
+  const _stored = localStorage.getItem('sidebar_collapsed');
+  setSidebarCollapsed(_stored !== null ? _stored === '1' : window.innerWidth <= 768);
   toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
   headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
 
