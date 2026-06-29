@@ -726,6 +726,14 @@ body {
 }
 .tooltip-detail span { font-size: .82rem; color: var(--gray-700); line-height: 1.4; }
 
+.tooltip-detail--live code {
+  background: var(--blue-100);
+  border: 1px solid var(--blue-100);
+  color: var(--blue-800);
+  line-height: 1.7;
+}
+.tooltip-detail--live .tooltip-detail-label { color: var(--blue-800); }
+
 /* ── Product type selector ──────────────────────────────────────────────── */
 .ptype-bar {
   display: flex;

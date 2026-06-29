@@ -4,7 +4,13 @@
  */
 const Dictionary = (() => {
   let _flat = {};
+  let _liveProvider = null;
+  let _openKey = null;
   const tooltip = document.getElementById('dict-tooltip');
+
+  /** Registra una función (key) => htmlString|null que genera la fórmula
+   *  con los valores actuales del simulador para términos calculados. */
+  function setLiveProvider(fn) { _liveProvider = fn; }
 
   async function load() {
     const data = await DataService.getDictionary();
@@ -55,14 +61,32 @@ const Dictionary = (() => {
       originRow.hidden = true;
     }
 
+    const liveRow = document.getElementById('tt-live-row');
+    const liveHtml = _liveProvider ? _liveProvider(key) : null;
+    if (liveHtml) {
+      document.getElementById('tt-live').innerHTML = liveHtml;
+      liveRow.hidden = false;
+    } else {
+      liveRow.hidden = true;
+    }
+
+    _openKey = key;
     tooltip.removeAttribute('aria-hidden');
     tooltip.classList.remove('hidden');
     positionTooltip(anchorEl);
   }
 
   function hide() {
+    _openKey = null;
     tooltip.setAttribute('aria-hidden', 'true');
     tooltip.classList.add('hidden');
+  }
+
+  /** Re-renderiza la fórmula "con tus valores" del tooltip abierto, si aplica. */
+  function refreshLive() {
+    if (!_openKey || tooltip.classList.contains('hidden')) return;
+    const liveHtml = _liveProvider ? _liveProvider(_openKey) : null;
+    if (liveHtml) document.getElementById('tt-live').innerHTML = liveHtml;
   }
 
   function positionTooltip(anchor) {
@@ -99,5 +123,5 @@ const Dictionary = (() => {
     });
   }
 
-  return { load, init, getFlat };
+  return { load, init, getFlat, setLiveProvider, refreshLive };
 })();

@@ -353,6 +353,39 @@ function recalcForwardOrNDF() {
   updateCashflow(N_display_base, N_display_quote, direction);
   updateFormula(spot, rb, rq, days, dayCount, F);
   updateNPVColor();
+  Dictionary.refreshLive();
+}
+
+// ── Fórmula "con tus valores actuales" para el tooltip del diccionario ──────
+function getLiveFormula(key) {
+  const { spot, rateBase, rateQuote, days, dayCount, fwdRate, fwdPoints,
+          notionalBase, notionalQuote, npv, spotMarket, direction, quoteCcy } = state;
+  if (state.productType === 'spot') return null;
+  const rb = rateBase / 100, rq = rateQuote / 100, t = days / dayCount;
+
+  switch (key) {
+    case 'forward_rate':
+      return `F = ${f4(spot)} &times; (1 + ${f4(rq)} &times; ${days}/${dayCount}) / (1 + ${f4(rb)} &times; ${days}/${dayCount})<br>` +
+             `F = ${f4(spot)} &times; ${f6(1 + rq * t)} / ${f6(1 + rb * t)}<br>` +
+             `<strong>F = ${f4(fwdRate)}</strong>`;
+
+    case 'forward_points':
+      return `FP = ${f4(fwdRate)} &minus; ${f4(spot)}<br>` +
+             `<strong>FP = ${f4(fwdPoints)}</strong>`;
+
+    case 'nocional_cotizada':
+      return `N<sub>${quoteCcy}</sub> = ${loc(notionalBase)} &times; ${f4(fwdRate)}<br>` +
+             `<strong>N<sub>${quoteCcy}</sub> = ${loc(notionalQuote)} ${quoteCcy}</strong>`;
+
+    case 'npv': {
+      const sign = direction === 'buy' ? '+1' : '&minus;1';
+      return `NPV = ${sign} &times; ${loc(notionalBase)} &times; [ ${f4(spotMarket)}/(1+${f4(rb)}&times;${t.toFixed(4)}) &minus; ${f4(fwdRate)}/(1+${f4(rq)}&times;${t.toFixed(4)}) ]<br>` +
+             `<strong>NPV = ${f2(npv)} ${quoteCcy}</strong>`;
+    }
+
+    default:
+      return null;
+  }
 }
 
 // ── NDF: calcular settlement ───────────────────────────────────────────────
@@ -519,6 +552,7 @@ async function init() {
   const config = await Loader.load('forward-fx');
   await Dictionary.load();
   Dictionary.init();
+  Dictionary.setLiveProvider(getLiveFormula);
 
   state.valueDate  = Engine.addDays(state.tradeDate, state.days);
   state.fixingDate = Engine.addDays(state.valueDate, -2);
