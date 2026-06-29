@@ -11,5 +11,18 @@
     "ask": [
       "Bash(git push:*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '^git push'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",additionalContext:\"Recordatorio CLAUDE.md: antes de continuar, verifica con mcp__github__pull_request_read (method get) si el PR de esta rama sigue abierto. Si ya esta merged o closed, crea un PR nuevo en lugar de asumir que este push se suma al PR existente.\"}}'; fi"
+          }
+        ]
+      }
+    ]
   }
 }
