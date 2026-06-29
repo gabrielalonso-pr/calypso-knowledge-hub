@@ -1,14 +1,15 @@
 {
   "id": "forward-fx",
-  "name": "Forward FX",
-  "description": "Contrato de compraventa de divisas a precio fijado hoy para liquidación futura.",
-  "categoria": "transferible",
+  "name": "FX Simulator",
   "dayCountOptions": [360, 365],
   "currencyPairs": [
-    { "id": "USDMXN", "base": "USD", "quote": "MXN", "spotDefault": 17.00, "rateBaseDefault": 5.00, "rateQuoteDefault": 11.00 },
-    { "id": "EURUSD", "base": "EUR", "quote": "USD", "spotDefault": 1.085, "rateBaseDefault": 3.50, "rateQuoteDefault": 5.00 },
-    { "id": "USDEUR", "base": "USD", "quote": "EUR", "spotDefault": 0.922, "rateBaseDefault": 5.00, "rateQuoteDefault": 3.50 },
-    { "id": "GBPUSD", "base": "GBP", "quote": "USD", "spotDefault": 1.271, "rateBaseDefault": 4.75, "rateQuoteDefault": 5.00 }
+    { "id": "USDMXN", "base": "USD", "quote": "MXN", "spotDefault": 17.00,   "rateBaseDefault": 5.00, "rateQuoteDefault": 11.00, "products": ["forward", "spot", "ndf"], "settleCcy": "USD" },
+    { "id": "EURUSD", "base": "EUR", "quote": "USD", "spotDefault": 1.0850,  "rateBaseDefault": 3.50, "rateQuoteDefault": 5.00,  "products": ["forward", "spot"] },
+    { "id": "USDEUR", "base": "USD", "quote": "EUR", "spotDefault": 0.9220,  "rateBaseDefault": 5.00, "rateQuoteDefault": 3.50,  "products": ["forward", "spot"] },
+    { "id": "GBPUSD", "base": "GBP", "quote": "USD", "spotDefault": 1.2710,  "rateBaseDefault": 4.75, "rateQuoteDefault": 5.00,  "products": ["forward", "spot"] },
+    { "id": "USDBRL", "base": "USD", "quote": "BRL", "spotDefault": 5.05,    "rateBaseDefault": 5.00, "rateQuoteDefault": 10.75, "products": ["ndf"], "settleCcy": "USD" },
+    { "id": "USDCOP", "base": "USD", "quote": "COP", "spotDefault": 3950.00, "rateBaseDefault": 5.00, "rateQuoteDefault": 9.25,  "products": ["ndf"], "settleCcy": "USD" },
+    { "id": "USDCLP", "base": "USD", "quote": "CLP", "spotDefault": 910.00,  "rateBaseDefault": 5.00, "rateQuoteDefault": 5.75,  "products": ["ndf"], "settleCcy": "USD" }
   ],
   "defaults": {
     "currencyPair": "USDMXN",

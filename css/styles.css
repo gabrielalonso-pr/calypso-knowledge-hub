@@ -401,12 +401,15 @@ body {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono);
   text-align: right;
-  width: 140px;
+  width: 150px;
   transition: border-color .15s, background .15s, box-shadow .15s;
   background: transparent;
   color: var(--gray-900);
+  -moz-appearance: textfield;
 }
 .price-val:focus { outline: none; }
+.price-val::-webkit-inner-spin-button,
+.price-val::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
 .price-val--input {
   border-color: var(--gray-300);
@@ -433,7 +436,7 @@ body {
 .price-val--featured {
   font-size: 1.05rem;
   font-weight: 700;
-  width: 140px;
+  width: 158px;
 }
 
 .price-val--rate { width: 80px; text-align: right; }
@@ -722,6 +725,103 @@ body {
   display: block;
 }
 .tooltip-detail span { font-size: .82rem; color: var(--gray-700); line-height: 1.4; }
+
+/* ── Product type selector ──────────────────────────────────────────────── */
+.ptype-bar {
+  display: flex;
+  gap: .3rem;
+  margin-bottom: 1rem;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: .35rem;
+  width: fit-content;
+  box-shadow: var(--shadow);
+}
+.ptype-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  padding: .38rem 1rem;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--gray-500);
+  letter-spacing: .02em;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.ptype-btn:hover { background: var(--gray-100); color: var(--gray-800); }
+.ptype-btn--active {
+  background: var(--blue-600);
+  color: var(--white);
+  box-shadow: 0 1px 4px rgba(37,99,235,.35);
+}
+
+/* ── NDF section ────────────────────────────────────────────────────────── */
+.ndf-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.ndf-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .65rem 1.1rem;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  flex-wrap: wrap;
+}
+.ndf-title {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--gray-500);
+}
+.ndf-note { font-size: .75rem; color: var(--gray-400); }
+.ndf-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: .85rem 1.1rem;
+}
+.ndf-field { display: flex; flex-direction: column; gap: .3rem; flex: 1; min-width: 220px; }
+.ndf-label {
+  font-size: .78rem;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.ndf-settlement {
+  padding: .65rem .85rem;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  font-family: var(--font-mono);
+  font-size: .88rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-900);
+  font-weight: 600;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.ndf-settlement--positive { color: var(--green-700); background: var(--green-50); border-color: #bbf7d0; }
+.ndf-settlement--negative { color: var(--red-700);   background: var(--red-50);   border-color: #fecaca; }
+
+/* ── Hidden util ────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── NPV colors (moved here from inline) ───────────────────────────────── */
+.price-val--positive { color: var(--green-700); }
+.price-val--negative { color: var(--red-700); }
 
 /* ── Misc ───────────────────────────────────────────────────────────────── */
 .dyn-label { font-style: normal; }

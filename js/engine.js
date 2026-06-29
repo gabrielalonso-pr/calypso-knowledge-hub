@@ -112,6 +112,30 @@ const Engine = (() => {
       return result > 0 ? safe(result) : null;  // spot nunca puede ser negativo
     },
 
+    // ── NDF Settlement ──────────────────────────────────────────────────────
+    //
+    // Al vencimiento no hay intercambio de nocionales.
+    // Se paga/recibe la diferencia entre el Forward pactado y el Spot de fixing,
+    // convertida a la divisa de liquidación (normalmente USD = moneda base).
+    //
+    // Para BUY base (USD):
+    //   Settlement_quote = Nb × (S_fixing − F_contract)
+    //   Settlement_USD   = Settlement_quote / S_fixing   = Nb × (1 − F/S_fixing)
+    //
+    // Si positivo → contraparte paga al comprador (ganó). Negativo → comprador paga.
+    //
+    settlementQuote(Nb, Fcontract, Sfixing, dir) {
+      if (!ok(Nb, Fcontract, Sfixing) || Nb <= 0 || Fcontract <= 0 || Sfixing <= 0) return null;
+      const sign = dir === 'buy' ? 1 : -1;
+      return safe(sign * Nb * (Sfixing - Fcontract));
+    },
+
+    settlementBase(Nb, Fcontract, Sfixing, dir) {
+      if (!ok(Nb, Fcontract, Sfixing) || Nb <= 0 || Fcontract <= 0 || Sfixing <= 0) return null;
+      const sign = dir === 'buy' ? 1 : -1;
+      return safe(sign * Nb * (Sfixing - Fcontract) / Sfixing);
+    },
+
     // ── Fechas ──────────────────────────────────────────────────────────────
 
     daysBetween(d1, d2) {
