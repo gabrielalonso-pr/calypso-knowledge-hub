@@ -1127,5 +1127,14 @@ body.has-sidebar { overflow-x: hidden; }
   }
   .sidebar:not(.sidebar--collapsed) { transform: translateX(0); }
   .sidebar--collapsed { transform: translateX(-100%); }
-  .sidebar-toggle { display: none; }
+
+  /* Backdrop — tap outside to close */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 199;
+  }
+  .sidebar-backdrop.visible { display: block; }
 }

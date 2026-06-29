@@ -61,6 +61,7 @@
       </div>
     </nav>
   </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
   <div class="page-wrap">
@@ -122,6 +123,7 @@
 
   function setSidebarCollapsed(collapsed) {
     sidebar.classList.toggle('sidebar--collapsed', collapsed);
+    document.getElementById('sidebar-backdrop').classList.toggle('visible', !collapsed);
     toggleBtn.textContent = collapsed ? '›' : '‹';
     toggleBtn.title = collapsed ? 'Expandir menú' : 'Colapsar menú';
     localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
@@ -131,6 +133,7 @@
   setSidebarCollapsed(_stored !== null ? _stored === '1' : window.innerWidth <= 768);
   toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
   headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  document.getElementById('sidebar-backdrop').addEventListener('click', () => setSidebarCollapsed(true));
 
   /* ── Sub-menú del diccionario en sidebar ────────────────────────────────── */
   const dictParent = document.getElementById('nav-dict-parent');
