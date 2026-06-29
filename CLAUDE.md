@@ -63,6 +63,9 @@ El parser detecta el tag raíz y el tag de segundo nivel automáticamente — fu
 - NO hagas push directo a `main`; siempre a la rama de la tarea/sesión.
 - Nombra las ramas con el formato: `feat/<descripcion-corta>` o `fix/<descripcion-corta>`.
   Ejemplos: `feat/sidebar-diccionario`, `fix/calculo-npv`.
+- El nombre de la rama SIEMPRE debe describir lo que se está implementando, nunca
+  usar nombres genéricos de sesión (como `claude/app-feature-*`). Si el harness asigna
+  una rama de sesión, crea tú mismo una rama descriptiva y haz push a esa.
 - Al terminar el push, crea el Pull Request automáticamente con `mcp__github__create_pull_request`
   apuntando a `main`. Incluye en el body: resumen, tabla de archivos modificados y checklist de pruebas.
 - Yo reviso y hago el merge manualmente — nunca hagas merge ni cierres el PR.
