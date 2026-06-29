@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forward FX — Calypso Knowledge Hub</title>
+  <title>FX Simulator — Calypso Knowledge Hub</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="has-sidebar">
@@ -44,7 +44,7 @@
       <span class="nav-section-label">Products</span>
       <a href="index.html" class="nav-item active">
         <span class="nav-icon">↔</span>
-        <span class="nav-label">Forward FX</span>
+        <span class="nav-label">FX Simulator</span>
       </a>
     </div>
     <div class="nav-section">
@@ -63,8 +63,8 @@
 
 <header class="page-header">
   <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
-  <h1 class="page-title">Forward FX</h1>
-  <p class="page-subtitle">Simulador interactivo · Covered Interest Rate Parity (CIP)</p>
+  <h1 class="page-title" id="page-title">FX Simulator</h1>
+  <p class="page-subtitle" id="page-subtitle">Forward FX · Covered Interest Rate Parity (CIP)</p>
 </header>
 
 <main class="app-main">
@@ -72,7 +72,7 @@
   <!-- Product bar -->
   <div class="product-bar">
     <div class="product-bar-info">
-      <p class="product-desc">
+      <p class="product-desc" id="product-desc">
         Compraventa de divisas a precio fijado hoy para liquidación futura ·
         <strong>Covered Interest Rate Parity (CIP)</strong>
       </p>
@@ -81,6 +81,13 @@
       <span class="tag tag--transferible">Transferible</span>
       <button id="btn-reset" class="btn-ghost" type="button">↺ Resetear</button>
     </div>
+  </div>
+
+  <!-- Product type selector -->
+  <div class="ptype-bar" id="ptype-bar">
+    <button class="ptype-btn ptype-btn--active" data-ptype="forward" type="button">Forward FX</button>
+    <button class="ptype-btn" data-ptype="spot"    type="button">FX Spot</button>
+    <button class="ptype-btn" data-ptype="ndf"     type="button">FX NDF</button>
   </div>
 
   <!-- Warning banner (oculto por defecto) -->
@@ -123,7 +130,7 @@
         <input type="date" id="f-trade-date" class="date-input">
       </div>
 
-      <div class="days-separator">
+      <div class="days-separator" id="days-section">
         <span class="days-arrow">←</span>
         <div class="days-field">
           <label for="f-days" class="days-label">
@@ -136,7 +143,7 @@
       </div>
 
       <div class="date-field">
-        <label for="f-value-date" class="date-label">Fecha valor</label>
+        <label for="f-value-date" class="date-label" id="lbl-value-date">Fecha valor</label>
         <input type="date" id="f-value-date" class="date-input">
       </div>
     </div><!-- /ticket-dates -->
@@ -161,71 +168,68 @@
                  step="0.0001" min="0.0001">
         </div>
 
-        <div class="price-row price-row--output">
+        <!-- Forward Points (oculto en Spot) -->
+        <div class="price-row price-row--output" id="row-fwd-points">
           <span class="price-lbl">
             Fwd Points
             <button class="dict-btn" data-dict="forward_points" type="button">?</button>
           </span>
-          <div class="price-output-wrap">
-            <input type="number" id="f-fwd-points" class="price-val price-val--output"
-                   step="0.0001" placeholder="calculado">
-            <button class="lock-btn hidden" data-lock="fwdPoints" type="button"
-                    title="Clic para desbloquear">🔒</button>
-          </div>
+          <input type="text" id="f-fwd-points" class="price-val price-val--output"
+                 placeholder="calculado">
         </div>
         <small class="solve-hint" id="hint-fwd-points"></small>
 
-        <div class="price-row price-row--output price-row--featured">
+        <!-- Forward Rate (oculto en Spot) -->
+        <div class="price-row price-row--output price-row--featured" id="row-fwd-rate">
           <span class="price-lbl price-lbl--featured">
             Forward Rate
             <button class="dict-btn" data-dict="forward_rate" type="button">?</button>
           </span>
-          <div class="price-output-wrap">
-            <input type="number" id="f-fwd-rate" class="price-val price-val--output price-val--featured"
-                   step="0.0001" placeholder="calculado">
-            <button class="lock-btn hidden" data-lock="fwdRate" type="button"
-                    title="Clic para desbloquear">🔒</button>
-          </div>
+          <input type="text" id="f-fwd-rate" class="price-val price-val--output price-val--featured"
+                 placeholder="calculado">
         </div>
         <small class="solve-hint" id="hint-fwd-rate"></small>
 
-        <div class="section-rule"></div>
-        <p class="section-label">TASAS</p>
+        <!-- Tasas (oculto en Spot) -->
+        <div id="rates-section">
+          <div class="section-rule"></div>
+          <p class="section-label">TASAS</p>
 
-        <div class="price-row">
-          <span class="price-lbl">
-            Tasa <span class="dyn-label" id="lbl-rate-base">USD</span>
-            <button class="dict-btn" data-dict="tasa_base" type="button">?</button>
-          </span>
-          <div class="rate-input-wrap">
-            <input type="number" id="f-rate-base" class="price-val price-val--rate"
-                   step="0.01">
-            <span class="rate-pct">%</span>
+          <div class="price-row">
+            <span class="price-lbl">
+              Tasa <span class="dyn-label" id="lbl-rate-base">USD</span>
+              <button class="dict-btn" data-dict="tasa_base" type="button">?</button>
+            </span>
+            <div class="rate-input-wrap">
+              <input type="number" id="f-rate-base" class="price-val price-val--rate"
+                     step="0.01">
+              <span class="rate-pct">%</span>
+            </div>
           </div>
-        </div>
 
-        <div class="price-row">
-          <span class="price-lbl">
-            Tasa <span class="dyn-label" id="lbl-rate-quote">MXN</span>
-            <button class="dict-btn" data-dict="tasa_cotizada" type="button">?</button>
-          </span>
-          <div class="rate-input-wrap">
-            <input type="number" id="f-rate-quote" class="price-val price-val--rate"
-                   step="0.01">
-            <span class="rate-pct">%</span>
+          <div class="price-row">
+            <span class="price-lbl">
+              Tasa <span class="dyn-label" id="lbl-rate-quote">MXN</span>
+              <button class="dict-btn" data-dict="tasa_cotizada" type="button">?</button>
+            </span>
+            <div class="rate-input-wrap">
+              <input type="number" id="f-rate-quote" class="price-val price-val--rate"
+                     step="0.01">
+              <span class="rate-pct">%</span>
+            </div>
           </div>
-        </div>
 
-        <div class="price-row">
-          <span class="price-lbl">
-            Convención
-            <button class="dict-btn" data-dict="convencion_dias" type="button">?</button>
-          </span>
-          <select id="f-daycount" class="daycount-select">
-            <option value="360">ACT/360</option>
-            <option value="365">ACT/365</option>
-          </select>
-        </div>
+          <div class="price-row">
+            <span class="price-lbl">
+              Convención
+              <button class="dict-btn" data-dict="convencion_dias" type="button">?</button>
+            </span>
+            <select id="f-daycount" class="daycount-select">
+              <option value="360">ACT/360</option>
+              <option value="365">ACT/365</option>
+            </select>
+          </div>
+        </div><!-- /rates-section -->
 
       </div><!-- /ticket-pricing -->
 
@@ -257,12 +261,8 @@
             Nocional <span class="dyn-label" id="lbl-quote">MXN</span>
             <button class="dict-btn" data-dict="nocional_cotizada" type="button">?</button>
           </span>
-          <div class="price-output-wrap">
-            <input type="number" id="f-notional-quote" class="price-val price-val--output"
-                   placeholder="calculado">
-            <button class="lock-btn hidden" data-lock="notionalQuote" type="button"
-                    title="Clic para desbloquear">🔒</button>
-          </div>
+          <input type="text" id="f-notional-quote" class="price-val price-val--output"
+                 placeholder="calculado">
         </div>
         <small class="solve-hint" id="hint-notional-quote"></small>
 
@@ -271,8 +271,47 @@
     </div><!-- /ticket-body -->
   </div><!-- /ticket -->
 
+  <!-- ════════════════════════ NDF CARD ════════════════════════════════ -->
+  <div class="ndf-card hidden" id="ndf-card">
+    <div class="ndf-header">
+      <span class="ndf-title">LIQUIDACIÓN NDF</span>
+      <span class="ndf-note">
+        Sin intercambio de nocionales · Solo se liquida la diferencia al tipo de fixing
+      </span>
+    </div>
+    <div class="ndf-body">
+
+      <div class="ndf-field">
+        <label for="f-fixing-date" class="ndf-label">
+          Fecha de fixing
+          <button class="dict-btn" data-dict="fixing_date" type="button">?</button>
+        </label>
+        <input type="date" id="f-fixing-date" class="date-input">
+      </div>
+
+      <div class="ndf-field">
+        <label for="f-spot-fixing" class="ndf-label">
+          Spot de fixing (<span class="dyn-label" id="lbl-ndf-pair">USD/MXN</span>)
+          <button class="dict-btn" data-dict="spot_fixing" type="button">?</button>
+        </label>
+        <input type="number" id="f-spot-fixing" class="price-val price-val--input"
+               step="0.0001" min="0.0001" style="width:100%; text-align:left;">
+      </div>
+
+      <div class="ndf-field">
+        <label class="ndf-label">
+          Settlement (<span class="dyn-label" id="lbl-settle-ccy">USD</span>)
+          <button class="dict-btn" data-dict="settlement_ndf" type="button">?</button>
+        </label>
+        <div class="ndf-settlement" id="ndf-settlement">—</div>
+        <small style="font-size:.7rem;color:var(--gray-400);margin-top:.2rem;" id="ndf-settlement-detail"></small>
+      </div>
+
+    </div>
+  </div><!-- /ndf-card -->
+
   <!-- ════════════════════════ MTM ══════════════════════════════════════ -->
-  <div class="mtm-card">
+  <div class="mtm-card" id="mtm-card">
     <div class="mtm-header">
       <span class="mtm-title">VALORACIÓN MTM</span>
       <span class="mtm-note">
@@ -295,12 +334,8 @@
           NPV (<span class="dyn-label" id="lbl-npv-ccy">MXN</span>)
           <button class="dict-btn" data-dict="npv" type="button">?</button>
         </label>
-        <div class="price-output-wrap">
-          <input type="number" id="f-npv" class="price-val price-val--output"
-                 placeholder="calculado">
-          <button class="lock-btn hidden" data-lock="npv" type="button"
-                  title="Clic para desbloquear">🔒</button>
-        </div>
+        <input type="text" id="f-npv" class="price-val price-val--output"
+               placeholder="calculado">
         <small class="solve-hint" id="hint-npv"></small>
       </div>
 
@@ -308,7 +343,7 @@
   </div>
 
   <!-- ════════════════════════ FÓRMULA ══════════════════════════════════ -->
-  <div class="formula-card">
+  <div class="formula-card" id="formula-card">
     <span class="formula-title">
       FÓRMULA CIP
       <button class="dict-btn" data-dict="covered_interest_parity" type="button">?</button>
