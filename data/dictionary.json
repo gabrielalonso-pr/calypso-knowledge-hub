@@ -103,6 +103,14 @@
       "formula": "Dato de mercado al momento de la valoración.",
       "origen": "Al inicio del contrato es igual al spot original → NPV = 0. Si el mercado se mueve, el NPV refleja la ganancia o pérdida flotante.",
       "categoria": "transferible"
+    },
+
+    "settlement_ndf": {
+      "termino": "Settlement NDF",
+      "definicion": "Monto que efectivamente se paga o cobra al vencimiento de un NDF. No hay intercambio de nocionales: solo se liquida la diferencia entre el Forward pactado y el Spot de fixing, convertida a la divisa de liquidación (normalmente USD).",
+      "formula": "Settlement_USD = N_base × (S_fixing − F_contract) / S_fixing  (signo invertido si la dirección es SELL)",
+      "origen": "N_base = nocional ingresado en el ticket. F_contract = Forward Rate calculado por CIP al momento del trade. S_fixing = Spot de fixing capturado manualmente el día del vencimiento.",
+      "categoria": "transferible"
     }
   },
 

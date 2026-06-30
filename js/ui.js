@@ -34,7 +34,7 @@ function parseNum(v) {
 
 // ── Estado central ─────────────────────────────────────────────────────────
 const state = {
-  productType:   'forward',   // 'forward' | 'spot' | 'ndf'
+  productType:   'spot',      // 'forward' | 'spot' | 'ndf'
   direction:     'buy',
   currencyPair:  'USDMXN',
   baseCcy:       'USD',

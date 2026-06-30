@@ -85,8 +85,8 @@
 
   <!-- Product type selector -->
   <div class="ptype-bar" id="ptype-bar">
-    <button class="ptype-btn" data-ptype="spot"    type="button">FX Spot</button>
-    <button class="ptype-btn ptype-btn--active" data-ptype="forward" type="button">Forward FX</button>
+    <button class="ptype-btn ptype-btn--active" data-ptype="spot"    type="button">FX Spot</button>
+    <button class="ptype-btn" data-ptype="forward" type="button">Forward FX</button>
     <button class="ptype-btn" data-ptype="ndf"     type="button">FX NDF</button>
   </div>
 
@@ -135,7 +135,6 @@
         <div class="days-field">
           <label for="f-days" class="days-label">
             Días
-            <button class="dict-btn" data-dict="dias_vencimiento" type="button">?</button>
           </label>
           <input type="number" id="f-days" class="days-input" min="1" step="1">
         </div>
@@ -162,10 +161,9 @@
           <span class="price-lbl">
             Spot
             <span class="pair-inline dyn-label" id="lbl-pair-inline">(USD/MXN)</span>
-            <button class="dict-btn" data-dict="spot_rate" type="button">?</button>
           </span>
-          <input type="number" id="f-spot" class="price-val price-val--input"
-                 step="0.0001" min="0.0001">
+          <input type="text" inputmode="decimal" id="f-spot" class="price-val price-val--input"
+                 placeholder="0.0000">
         </div>
 
         <!-- Forward Points (oculto en Spot) -->
@@ -198,11 +196,9 @@
           <div class="price-row">
             <span class="price-lbl">
               Tasa <span class="dyn-label" id="lbl-rate-base">USD</span>
-              <button class="dict-btn" data-dict="tasa_base" type="button">?</button>
             </span>
             <div class="rate-input-wrap">
-              <input type="number" id="f-rate-base" class="price-val price-val--rate"
-                     step="0.01">
+              <input type="text" inputmode="decimal" id="f-rate-base" class="price-val price-val--rate">
               <span class="rate-pct">%</span>
             </div>
           </div>
@@ -213,8 +209,7 @@
               <button class="dict-btn" data-dict="tasa_cotizada" type="button">?</button>
             </span>
             <div class="rate-input-wrap">
-              <input type="number" id="f-rate-quote" class="price-val price-val--rate"
-                     step="0.01">
+              <input type="text" inputmode="decimal" id="f-rate-quote" class="price-val price-val--rate">
               <span class="rate-pct">%</span>
             </div>
           </div>
@@ -222,7 +217,6 @@
           <div class="price-row">
             <span class="price-lbl">
               Convención
-              <button class="dict-btn" data-dict="convencion_dias" type="button">?</button>
             </span>
             <select id="f-daycount" class="daycount-select">
               <option value="360">ACT/360</option>
@@ -284,7 +278,6 @@
       <div class="ndf-field">
         <label for="f-fixing-date" class="ndf-label">
           Fecha de fixing
-          <button class="dict-btn" data-dict="fixing_date" type="button">?</button>
         </label>
         <input type="date" id="f-fixing-date" class="date-input">
       </div>
@@ -292,10 +285,9 @@
       <div class="ndf-field">
         <label for="f-spot-fixing" class="ndf-label">
           Spot de fixing (<span class="dyn-label" id="lbl-ndf-pair">USD/MXN</span>)
-          <button class="dict-btn" data-dict="spot_fixing" type="button">?</button>
         </label>
-        <input type="number" id="f-spot-fixing" class="price-val price-val--input"
-               step="0.0001" min="0.0001" style="width:100%; text-align:left;">
+        <input type="text" inputmode="decimal" id="f-spot-fixing" class="price-val price-val--input"
+               placeholder="0.0000" style="width:100%; text-align:left;">
       </div>
 
       <div class="ndf-field">
@@ -325,8 +317,8 @@
           Spot mercado actual
           <button class="dict-btn" data-dict="spot_mercado" type="button">?</button>
         </label>
-        <input type="number" id="f-spot-market" class="price-val price-val--output"
-               step="0.0001" min="0.0001">
+        <input type="text" inputmode="decimal" id="f-spot-market" class="price-val price-val--output"
+               placeholder="0.0000">
       </div>
 
       <div class="mtm-field">
