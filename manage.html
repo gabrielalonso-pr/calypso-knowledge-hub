@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Contenido — Calypso Knowledge Hub</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="has-sidebar">
+
+<div class="layout">
+
+  <!-- ══════════════════════════ SIDEBAR ════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-mark">◈</span>
+        <span class="logo-name">Calypso <strong>Hub</strong></span>
+      </div>
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Colapsar menú" aria-label="Colapsar menú">‹</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">Knowledge</span>
+        <a href="dictionary.html" class="nav-item nav-item--parent" id="nav-dict-parent">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">Diccionario Calypso</span>
+          <span class="nav-arrow">▾</span>
+        </a>
+        <div class="nav-sub" id="nav-dict-sub">
+          <a href="dictionary.html#mod-forward_fx"          class="nav-subitem"><span class="nav-subitem-icon">↔</span><span class="nav-label">Forward FX</span></a>
+          <a href="dictionary.html#mod-static_data"         class="nav-subitem"><span class="nav-subitem-icon">🗂</span><span class="nav-label">Static Data</span></a>
+          <a href="dictionary.html#mod-pricing_environment" class="nav-subitem"><span class="nav-subitem-icon">⚡</span><span class="nav-label">Pricing Environment</span></a>
+          <a href="dictionary.html#mod-front_office"        class="nav-subitem"><span class="nav-subitem-icon">📈</span><span class="nav-label">Front Office</span></a>
+          <a href="dictionary.html#mod-post_trade"          class="nav-subitem"><span class="nav-subitem-icon">✅</span><span class="nav-label">Post-Trade</span></a>
+        </div>
+        <a href="glossary.html" class="nav-item">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label">Mi Glosario</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">Products</span>
+        <a href="index.html" class="nav-item">
+          <span class="nav-icon">↔</span>
+          <span class="nav-label">Forward FX</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">Tools</span>
+        <a href="xml-editor.html" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Editor XML</span>
+        </a>
+        <a href="manage.html" class="nav-item active">
+          <span class="nav-icon">🛠</span>
+          <span class="nav-label">Gestión de Contenido</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- ══════════════════════════ MAIN ═══════════════════════════════════════ -->
+  <div class="page-wrap">
+
+    <header class="page-header">
+      <button class="header-toggle" id="header-toggle" type="button" aria-label="Abrir menú">☰</button>
+      <h1 class="page-title">Gestión de Contenido</h1>
+      <p class="page-subtitle">Diccionario, glosario y fichas de producto · Todo se guarda localmente (localStorage → futura DB)</p>
+    </header>
+
+    <main class="page-main">
+
+      <!-- Tabs -->
+      <div class="mgmt-tabs">
+        <button class="mgmt-tab" data-tab="dictionary" type="button">📖 Diccionario</button>
+        <button class="mgmt-tab" data-tab="glossary"   type="button">✏️ Mi Glosario</button>
+        <button class="mgmt-tab" data-tab="products"   type="button">⚙ Fichas de producto</button>
+        <button class="mgmt-tab" data-tab="templates"  type="button">🤖 Plantilla IA</button>
+      </div>
+
+      <!-- ════════════ PANEL 1 — DICCIONARIO ════════════ -->
+      <section class="mgmt-panel" id="panel-dictionary">
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Proponer término al diccionario Calypso</h2>
+          <p class="mgmt-card-desc">
+            El diccionario oficial vive en <code>data/dictionary.json</code> (archivo estático). Las propuestas
+            que agregues aquí se guardan localmente; usa "Exportar propuestas" para obtener un JSON agrupado
+            por módulo y fusionarlo a mano en ese archivo.
+          </p>
+
+          <form id="dp-form" class="mgmt-inline-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="dp-modulo">Módulo</label>
+              <select id="dp-modulo" class="form-select"></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="dp-termino">Término <span class="form-required">*</span></label>
+              <input type="text" id="dp-termino" class="form-input" placeholder="ej. Swap Point" required>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="dp-definicion">Definición <span class="form-required">*</span></label>
+              <textarea id="dp-definicion" class="form-textarea" rows="3" placeholder="Explica el concepto en términos simples..." required></textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="dp-formula">Fórmula <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="dp-formula" class="form-input" placeholder="ej. F = S × (1 + r_q·d/DC) / (1 + r_b·d/DC)">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="dp-origen">Origen / Fuente <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="dp-origen" class="form-input" placeholder="ej. Hull Cap. 5, curso Calypso 102...">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="dp-categoria">Categoría</label>
+              <select id="dp-categoria" class="form-select">
+                <option value="transferible">Transferible</option>
+                <option value="especifico_calypso">Específico Calypso</option>
+              </select>
+            </div>
+            <p class="form-error hidden" id="dp-error">Completa los campos requeridos.</p>
+            <div class="form-actions">
+              <button type="button" id="dp-cancel" class="btn-ghost">Cancelar</button>
+              <button type="submit" id="dp-submit" class="btn-primary">Agregar propuesta</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="mgmt-card">
+          <div class="glos-toolbar">
+            <h2 class="mgmt-card-title" style="margin:0;">Propuestas pendientes</h2>
+            <button id="dp-export" class="btn-ghost" type="button">Exportar propuestas (JSON)</button>
+          </div>
+          <div id="dp-list"></div>
+          <p id="dp-empty" class="dict-empty hidden">Aún no hay propuestas. Agrega la primera arriba.</p>
+        </div>
+      </section>
+
+      <!-- ════════════ PANEL 2 — MI GLOSARIO ════════════ -->
+      <section class="mgmt-panel" id="panel-glossary">
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Nuevo término personal</h2>
+          <p class="mgmt-card-desc">Tus propios términos y notas. Equivalente a la página "Mi Glosario", gestionable también desde aquí.</p>
+
+          <form id="gl-form" class="mgmt-inline-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="gl-termino">Término <span class="form-required">*</span></label>
+              <input type="text" id="gl-termino" class="form-input" placeholder="ej. Greeks, VaR, CCP..." required>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="gl-definicion">Definición <span class="form-required">*</span></label>
+              <textarea id="gl-definicion" class="form-textarea" rows="3" placeholder="Explica el concepto con tus propias palabras..." required></textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="gl-formula">Fórmula <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="gl-formula" class="form-input" placeholder="ej. Delta = ∂V/∂S">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="gl-origen">Origen / Fuente <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="gl-origen" class="form-input" placeholder="ej. Hull Cap. 5, curso Calypso 102...">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="gl-categoria">Categoría</label>
+              <select id="gl-categoria" class="form-select">
+                <option value="personal">Personal</option>
+                <option value="transferible">Transferible</option>
+                <option value="especifico_calypso">Específico Calypso</option>
+              </select>
+            </div>
+            <p class="form-error hidden" id="gl-error">Completa los campos requeridos.</p>
+            <div class="form-actions">
+              <button type="button" id="gl-cancel" class="btn-ghost">Cancelar</button>
+              <button type="submit" id="gl-submit" class="btn-primary">Agregar término</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="mgmt-card">
+          <div class="glos-toolbar">
+            <h2 class="mgmt-card-title" style="margin:0;">Mis términos</h2>
+            <button id="gl-export" class="btn-ghost" type="button">Exportar JSON</button>
+          </div>
+          <div id="gl-list"></div>
+          <p id="gl-empty" class="dict-empty hidden">Aún no tienes términos guardados.</p>
+        </div>
+      </section>
+
+      <!-- ════════════ PANEL 3 — FICHAS DE PRODUCTO ════════════ -->
+      <section class="mgmt-panel" id="panel-products">
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Ficha de configuración de producto</h2>
+          <p class="mgmt-card-desc">
+            Las fichas reales viven en <code>config/products/*.json</code> y las consume <code>js/loader.js</code>.
+            Pega o escribe el JSON completo de la ficha (mismo esquema que <code>forward-fx.json</code>), guárdalo
+            como borrador y luego usa "Exportar JSON" para subirlo al repositorio.
+          </p>
+
+          <form id="pd-form" class="mgmt-inline-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="pd-json">JSON de la ficha <span class="form-required">*</span></label>
+              <textarea id="pd-json" class="form-textarea mgmt-textarea" placeholder='{ "id": "...", "name": "...", "currencyPairs": [...] }'></textarea>
+            </div>
+            <p class="form-error hidden" id="pd-error"></p>
+            <div class="form-actions">
+              <button type="button" id="pd-cancel" class="btn-ghost">Cancelar</button>
+              <button type="submit" id="pd-submit" class="btn-primary">Agregar ficha</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Borradores guardados</h2>
+          <div id="pd-list"></div>
+          <p id="pd-empty" class="dict-empty hidden">Aún no hay fichas guardadas.</p>
+        </div>
+      </section>
+
+      <!-- ════════════ PANEL 4 — PLANTILLAS IA ════════════ -->
+      <section class="mgmt-panel" id="panel-templates">
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Plantillas para generación con IA externa</h2>
+          <p class="mgmt-card-desc">
+            Copia la plantilla, pégala en tu IA de preferencia junto con el contexto que necesites generar,
+            y pega el JSON resultante en el importador de abajo para validarlo antes de guardarlo.
+          </p>
+
+          <h3 class="entry-detail-label" style="margin-top:.5rem;">Entrada de diccionario</h3>
+          <div class="mgmt-template-box" id="tpl-dictionary"></div>
+          <button class="btn-ghost" data-copy-tpl="dictionary" type="button">Copiar plantilla</button>
+
+          <h3 class="entry-detail-label" style="margin-top:1rem;">Entrada de Mi Glosario</h3>
+          <div class="mgmt-template-box" id="tpl-glossary"></div>
+          <button class="btn-ghost" data-copy-tpl="glossary" type="button">Copiar plantilla</button>
+
+          <h3 class="entry-detail-label" style="margin-top:1rem;">Ficha de configuración de producto</h3>
+          <div class="mgmt-template-box" id="tpl-product"></div>
+          <button class="btn-ghost" data-copy-tpl="product" type="button">Copiar plantilla</button>
+        </div>
+
+        <div class="mgmt-card">
+          <h2 class="mgmt-card-title">Importar JSON generado</h2>
+          <p class="mgmt-card-desc">
+            Acepta un objeto único o un array. Detecta automáticamente si es una entrada de diccionario/glosario
+            o una ficha de producto, y valida los campos requeridos antes de permitir la importación.
+          </p>
+
+          <div class="form-field" style="padding-top:0;">
+            <label class="form-label" for="imp-json">JSON a importar</label>
+            <textarea id="imp-json" class="form-textarea mgmt-textarea" placeholder="Pega aquí el JSON generado..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="imp-dest">Destino de las entradas de diccionario/glosario</label>
+            <select id="imp-dest" class="form-select">
+              <option value="dictionary">Propuestas de diccionario</option>
+              <option value="glossary">Mi Glosario</option>
+            </select>
+          </div>
+
+          <div class="mgmt-btn-row" style="padding: 0 1.25rem;">
+            <button id="imp-validate" class="btn-ghost" type="button">Validar / Previsualizar</button>
+            <button id="imp-confirm" class="btn-primary" type="button" disabled>Importar</button>
+          </div>
+
+          <div class="mgmt-preview" id="imp-result">
+            <p class="mgmt-preview-empty">Aún no has validado ningún JSON.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/manage.js"></script>
+<script>
+(async () => {
+  /* ── Sidebar toggle (idéntico al resto de páginas) ──────────────────────── */
+  const sidebar      = document.getElementById('sidebar');
+  const toggleBtn    = document.getElementById('sidebar-toggle');
+  const headerToggle = document.getElementById('header-toggle');
+
+  function setSidebarCollapsed(collapsed) {
+    sidebar.classList.toggle('sidebar--collapsed', collapsed);
+    document.getElementById('sidebar-backdrop').classList.toggle('visible', !collapsed);
+    toggleBtn.textContent = collapsed ? '›' : '‹';
+    toggleBtn.title = collapsed ? 'Expandir menú' : 'Colapsar menú';
+    localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+  }
+
+  const _stored = localStorage.getItem('sidebar_collapsed');
+  setSidebarCollapsed(_stored !== null ? _stored === '1' : window.innerWidth <= 768);
+  toggleBtn.addEventListener('click',    () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  headerToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('sidebar--collapsed')));
+  document.getElementById('sidebar-backdrop').addEventListener('click', () => setSidebarCollapsed(true));
+
+  const dictParent = document.getElementById('nav-dict-parent');
+  const dictSub    = document.getElementById('nav-dict-sub');
+  function setSubCollapsed(c) {
+    dictSub.classList.toggle('nav-sub--collapsed', c);
+    dictParent.classList.toggle('collapsed', c);
+    localStorage.setItem('dict_sub_collapsed', c ? '1' : '0');
+  }
+  setSubCollapsed(localStorage.getItem('dict_sub_collapsed') === '1');
+  dictParent.addEventListener('click', (e) => {
+    if (e.target.closest('a') === dictParent) {
+      e.preventDefault();
+      setSubCollapsed(!dictSub.classList.contains('nav-sub--collapsed'));
+    }
+  });
+
+  /* ── Lógica de la página ─────────────────────────────────────────────────── */
+  await Manage.init();
+})();
+</script>
+</body>
+</html>
