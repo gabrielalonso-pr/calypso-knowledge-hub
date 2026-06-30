@@ -21,10 +21,20 @@ Por eso:
 - Sin backend pagado
 
 ## Funcionalidades del MVP (en este orden de prioridad)
-  1. Simulador interactivo de un Forward FX (inputs básicos, cálculo de cashflow, prices, rates, etc..), debe ser escalable a otros productos mediante archivos de configuración.
-  2. Diccionario interactivo: hover sobre cualquier valor calculado muestra definición + fórmula + origen del número. El diccionario debe permitir entradas nuevas, mediante formularios dentro de la página web, mediante texto estructurado que pueda ser generado con IA de forma externa
-  3. Etiquetado de cada concepto como "específico de Calypso" o "transferible a otras plataformas financieras"
-  4. Generación asistida por IA de una ficha de configuración del producto simulado, por temas de tiempo, la ficha de configuración se generará de forma externa con IA y se subirá al repositorio.
+  1. ✅ Simulador interactivo de un Forward FX (inputs básicos, cálculo de cashflow, prices, rates, etc..), debe ser escalable a otros productos mediante archivos de configuración.
+     Implementado en `index.html` + `js/engine.js` + `js/ui.js`, configurado vía `config/products/*.json`.
+     Actualmente cubre FX Spot, Forward y NDF sobre varios pares (incluye USDMXN, USDBRL, USDCOP, USDCLP, etc.).
+  2. ✅ Diccionario interactivo: hover sobre cualquier valor calculado muestra definición + fórmula + origen del número. El diccionario debe permitir entradas nuevas, mediante formularios dentro de la página web, mediante texto estructurado que pueda ser generado con IA de forma externa.
+     Implementado en `dictionary.html` / `js/dictionary.js` (lectura + tooltips) y `manage.html` / `js/manage.js`
+     (formulario de propuestas + importador de JSON generado externamente, con plantillas IA incluidas).
+  3. ✅ Etiquetado de cada concepto como "específico de Calypso" o "transferible a otras plataformas financieras".
+     Campo `categoria` presente en `data/dictionary.json` y en los formularios de `manage.html` / `glossary.html`.
+  4. ✅ Generación asistida por IA de una ficha de configuración del producto simulado, por temas de tiempo, la ficha de configuración se generará de forma externa con IA y se subirá al repositorio.
+     Implementado en `manage.html` (tab "Fichas de producto" + tab "Plantilla IA"): permite pegar/validar el JSON
+     generado externamente y exportarlo listo para subir a `config/products/`.
+
+  Las 4 funcionalidades del MVP están completas. Pendiente conocido: no hay documentación de proceso (README)
+  que explique cómo correr el proyecto en local ni el flujo de "Gestión de Contenido" para alguien nuevo al repo.
 
 ## Editor XML de Trades (`xml-editor.html`)
 
