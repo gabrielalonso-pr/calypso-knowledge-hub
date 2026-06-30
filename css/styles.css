@@ -1073,6 +1073,7 @@ body.has-sidebar { overflow-x: hidden; }
   box-shadow: var(--shadow);
   overflow: hidden;
   margin-bottom: 1.25rem;
+  scroll-margin-top: 68px;
 }
 
 .dict-module-header {
