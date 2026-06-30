@@ -221,11 +221,32 @@ function recalc() {
   }
 }
 
+// ── Limpieza de outputs cuando falta un input necesario ────────────────────
+function clearSpotOutputs() {
+  setVal('f-notional-quote', '');
+  if ($('cf-pay-amount'))  $('cf-pay-amount').textContent  = '—';
+  if ($('cf-recv-amount')) $('cf-recv-amount').textContent = '—';
+}
+
+function clearForwardOutputs() {
+  setVal('f-fwd-rate', '');
+  setVal('f-fwd-points', '');
+  setVal('f-notional-quote', '');
+  setVal('f-npv', '');
+  if ($('cf-pay-amount'))     $('cf-pay-amount').textContent  = '—';
+  if ($('cf-recv-amount'))    $('cf-recv-amount').textContent = '—';
+  if ($('formula-numeric'))   $('formula-numeric').innerHTML  = '—';
+  clearSolved('f-rate-quote');
+  clearSolved('f-notional-base');
+  clearSolved('f-spot-market');
+  updateNDFSettlement(null, null);
+}
+
 function recalcSpot() {
   const { spot, notionalBase, direction } = state;
 
-  if (!spot || spot <= 0)               { warn('El Spot Rate debe ser mayor que cero.'); return; }
-  if (!notionalBase || notionalBase <= 0) { warn('El Nocional debe ser mayor que cero.'); return; }
+  if (!spot || spot <= 0)               { warn('El Spot Rate debe ser mayor que cero.'); clearSpotOutputs(); return; }
+  if (!notionalBase || notionalBase <= 0) { warn('El Nocional debe ser mayor que cero.'); clearSpotOutputs(); return; }
 
   const Nq = Engine.notionalQuote(notionalBase, spot);
   state.notionalQuote = Nq;
@@ -235,20 +256,22 @@ function recalcSpot() {
 }
 
 function recalcForwardOrNDF() {
-  const rb = state.rateBase  / 100;
-  const rq = state.rateQuote / 100;
   const { spot, days, dayCount, notionalBase, spotMarket, direction } = state;
 
-  if (!spot || spot <= 0)               { warn('El Spot Rate debe ser mayor que cero.'); return; }
-  if (!days || days <= 0)               { warn('Los días al vencimiento deben ser > 0.'); return; }
-  if (!notionalBase || notionalBase <= 0) { warn('El Nocional debe ser mayor que cero.'); return; }
+  if (state.rateBase == null || state.rateQuote == null) { warn('Las tasas de interés deben tener un valor.'); clearForwardOutputs(); return; }
+  const rb = state.rateBase  / 100;
+  const rq = state.rateQuote / 100;
+
+  if (!spot || spot <= 0)               { warn('El Spot Rate debe ser mayor que cero.'); clearForwardOutputs(); return; }
+  if (!days || days <= 0)               { warn('Los días al vencimiento deben ser > 0.'); clearForwardOutputs(); return; }
+  if (!notionalBase || notionalBase <= 0) { warn('El Nocional debe ser mayor que cero.'); clearForwardOutputs(); return; }
 
   // ── Paso 1: Forward Rate ─────────────────────────────────────────────────
   let F = null;
 
   if (state.locked.has('fwdRate')) {
     F = state.fwdRate;
-    if (!F || F <= 0) { warn('Forward Rate bloqueado tiene valor inválido.'); return; }
+    if (!F || F <= 0) { warn('Forward Rate bloqueado tiene valor inválido.'); clearForwardOutputs(); return; }
 
     const rq_new = Engine.impliedRateQuote(F, spot, rb, days, dayCount);
     if (rq_new !== null) {
@@ -265,10 +288,10 @@ function recalcForwardOrNDF() {
     hint('hint-fwd-points', '');
 
   } else if (state.locked.has('fwdPoints')) {
-    if (state.fwdPoints == null) { warn('Forward Points no tiene valor válido.'); return; }
+    if (state.fwdPoints == null) { warn('Forward Points no tiene valor válido.'); clearForwardOutputs(); return; }
     F = spot + state.fwdPoints;
     state.fwdRate = F;
-    if (F <= 0) { warn('Forward Points implica un Forward Rate negativo. Inválido.'); return; }
+    if (F <= 0) { warn('Forward Points implica un Forward Rate negativo. Inválido.'); clearForwardOutputs(); return; }
 
     const rq_new = Engine.impliedRateQuote(F, spot, rb, days, dayCount);
     if (rq_new !== null) {
@@ -285,7 +308,7 @@ function recalcForwardOrNDF() {
 
   } else {
     F = Engine.forwardRate(spot, rb, rq, days, dayCount);
-    if (F === null) { warn('Error en el cálculo del Forward Rate. Revisa los datos de entrada.'); return; }
+    if (F === null) { warn('Error en el cálculo del Forward Rate. Revisa los datos de entrada.'); clearForwardOutputs(); return; }
 
     state.fwdRate   = F;
     state.fwdPoints = Engine.forwardPoints(F, spot);
@@ -301,7 +324,7 @@ function recalcForwardOrNDF() {
 
   if (state.locked.has('notionalQuote')) {
     Nq = state.notionalQuote;
-    if (!Nq || Nq <= 0) { warn('Nocional cotizado bloqueado tiene valor inválido.'); return; }
+    if (!Nq || Nq <= 0) { warn('Nocional cotizado bloqueado tiene valor inválido.'); clearForwardOutputs(); return; }
 
     Nb = Engine.notionalBase(Nq, F);
     if (Nb !== null) {
@@ -456,6 +479,16 @@ function updateNPVColor() {
 
 // ── Sincronización días ↔ fechas ───────────────────────────────────────────
 function applyDays(n) {
+  if (n == null) {
+    state.days = null;
+    state.valueDate = null;
+    setVal('f-value-date', '');
+    if (state.productType === 'ndf') {
+      state.fixingDate = null;
+      setVal('f-fixing-date', '');
+    }
+    return;
+  }
   state.days = Math.round(n);
   state.valueDate = Engine.addDays(state.tradeDate, state.days);
   setVal('f-value-date', state.valueDate);
@@ -603,7 +636,8 @@ async function init() {
   // Nocional base
   $('f-notional-base').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null && v > 0) { state.notionalBase = v; recalc(); }
+    state.notionalBase = (v != null && v > 0) ? v : null;
+    recalc();
   });
 
   // Fecha trade
@@ -634,25 +668,29 @@ async function init() {
   // Días
   $('f-days').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null && v > 0) { applyDays(v); recalc(); }
+    applyDays(v != null && v > 0 ? v : null);
+    recalc();
   });
 
   // Spot
   $('f-spot').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null && v > 0) { state.spot = v; recalc(); }
+    state.spot = (v != null && v > 0) ? v : null;
+    recalc();
   });
 
   // Tasa base
   $('f-rate-base').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null) { state.rateBase = v; recalc(); }
+    state.rateBase = v;
+    recalc();
   });
 
   // Tasa cotizada
   $('f-rate-quote').addEventListener('input', e => {
     const v = parseNum(e.target.value);
-    if (v != null) { state.rateQuote = v; recalc(); }
+    state.rateQuote = v;
+    recalc();
   });
 
   // Convención días
@@ -672,7 +710,8 @@ async function init() {
   $('f-spot-market').addEventListener('input', e => {
     if (state.locked.has('npv')) return;
     const v = parseNum(e.target.value);
-    if (v != null && v > 0) { state.spotMarket = v; recalc(); }
+    state.spotMarket = (v != null && v > 0) ? v : null;
+    recalc();
   });
 
   // NDF: fecha de fixing
