@@ -139,6 +139,7 @@
         <div class="days-field">
           <label for="f-days" class="days-label">
             Días
+            <button class="dict-btn" data-dict="dias_vencimiento" type="button" aria-label="Definición">?</button>
           </label>
           <input type="number" id="f-days" class="days-input" min="1" step="1">
         </div>
@@ -165,6 +166,7 @@
           <span class="price-lbl">
             Spot
             <span class="pair-inline dyn-label" id="lbl-pair-inline">(USD/MXN)</span>
+            <button class="dict-btn" data-dict="spot_rate" type="button" aria-label="Definición">?</button>
           </span>
           <input type="text" inputmode="decimal" id="f-spot" class="price-val price-val--input"
                  placeholder="0.0000">
@@ -200,6 +202,7 @@
           <div class="price-row">
             <span class="price-lbl">
               Tasa <span class="dyn-label" id="lbl-rate-base">USD</span>
+              <button class="dict-btn" data-dict="tasa_base" type="button" aria-label="Definición">?</button>
             </span>
             <div class="rate-input-wrap">
               <input type="text" inputmode="decimal" id="f-rate-base" class="price-val price-val--rate">
@@ -282,6 +285,7 @@
       <div class="ndf-field">
         <label for="f-fixing-date" class="ndf-label">
           Fecha de fixing
+          <button class="dict-btn" data-dict="fixing_date" type="button" aria-label="Definición">?</button>
         </label>
         <input type="date" id="f-fixing-date" class="date-input">
       </div>
