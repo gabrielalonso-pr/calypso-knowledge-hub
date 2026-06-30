@@ -5,165 +5,245 @@
 <title>Calypso Knowledge Hub — Presentación</title>
 <style>
   :root{
-    --navy:#0f1b3d; --navy2:#16244d; --blue:#2563eb; --gray:#475569;
-    --bg:#f1f5f9; --green:#16a34a; --red:#dc2626;
+    --orange:#E8622C; --orange-dark:#C84A1E; --orange-light:#FBEAE2;
+    --ink:#1F2430; --gray:#6B7280; --line:#ECE7E2; --bg:#F7F4F1;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--navy);}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#2b2b2b;}
   .deck{width:100vw;height:100vh;overflow:hidden;position:relative;}
   .slide{
     position:absolute;inset:0;display:none;flex-direction:column;
-    background:var(--bg);padding:56px 72px;
+    background:#fff;padding:0;
   }
   .slide.active{display:flex;}
-  .slide h1{font-size:40px;color:var(--navy);margin:0 0 6px;}
-  .slide h2{font-size:30px;color:var(--navy);margin:0 0 18px;}
-  .kicker{color:var(--blue);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:13px;margin-bottom:10px;}
-  .slide p{color:var(--gray);font-size:19px;line-height:1.5;}
-  .slide ul{color:var(--gray);font-size:19px;line-height:1.6;}
-  .slide ul li{margin-bottom:8px;}
-  .cover{justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,var(--navy),var(--navy2));}
-  .cover h1{color:#fff;font-size:54px;}
-  .cover p{color:#9fb0d8;font-size:22px;}
-  .cover .tag{color:#5b8def;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:24px;font-size:14px;}
-  .thanks{justify-content:center;align-items:center;background:linear-gradient(135deg,var(--navy),var(--navy2));}
-  .thanks h1{color:#fff;font-size:64px;}
-  .content-row{display:flex;gap:36px;flex:1;min-height:0;}
-  .col{flex:1;display:flex;flex-direction:column;justify-content:center;}
-  .col.img{justify-content:flex-start;}
-  .shot{width:100%;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);border:1px solid #cbd5e1;}
-  .badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;margin-right:6px;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;flex:1;}
-  .card{background:#fff;border-radius:12px;padding:22px 24px;border:1px solid #e2e8f0;}
-  .card h3{margin:0 0 8px;color:var(--navy);font-size:19px;}
-  .card p{font-size:16px;margin:0;}
-  .num{position:absolute;bottom:24px;right:36px;color:#94a3b8;font-size:13px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:26px 56px 0;}
+  .brand{display:flex;align-items:center;gap:8px;}
+  .brand .sq{width:10px;height:10px;background:var(--orange);border-radius:2px;}
+  .brand span{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--gray);text-transform:uppercase;}
+  .corner{width:46px;height:46px;background:var(--orange);border-radius:0 0 0 16px;}
+  .body{padding:18px 56px 50px;flex:1;display:flex;flex-direction:column;min-height:0;}
+  .kicker{color:var(--orange);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:12px;margin-bottom:8px;}
+  h1.t,h2.t{font-size:32px;color:var(--ink);margin:0 0 22px;font-weight:800;}
+  .lead{color:var(--gray);font-size:17px;line-height:1.55;max-width:780px;}
+
+  /* cover */
+  .cover{background:var(--orange);justify-content:center;}
+  .cover-card{margin:auto;background:var(--orange);width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 80px;position:relative;}
+  .cover-card .tag{color:#FBD9C7;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:13px;margin-bottom:14px;}
+  .cover-card h1{color:#fff;font-size:56px;margin:0 0 14px;font-weight:800;}
+  .cover-card p{color:#FCE3D6;font-size:20px;margin:0;}
+  .cover-corner{position:absolute;top:36px;right:48px;width:54px;height:54px;background:rgba(255,255,255,.18);border-radius:10px;}
+
+  /* numbered list */
+  .numlist{display:flex;flex-direction:column;gap:14px;flex:1;justify-content:center;max-width:880px;}
+  .numitem{display:flex;align-items:flex-start;gap:18px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;}
+  .numitem .badge{flex:0 0 auto;width:34px;height:34px;border-radius:8px;background:var(--orange-light);color:var(--orange-dark);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .numitem .icon{font-size:18px;margin-right:6px;}
+  .numitem h3{margin:0 0 4px;font-size:16px;color:var(--ink);font-weight:700;}
+  .numitem p{margin:0;font-size:14px;color:var(--gray);line-height:1.4;}
+
+  /* feature cards grid */
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;flex:1;align-content:center;}
+  .fcard{border:1px solid var(--line);border-radius:14px;padding:20px 16px;text-align:left;}
+  .fcard .ico{width:42px;height:42px;border-radius:10px;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;}
+  .fcard h3{font-size:14px;margin:0 0 6px;color:var(--ink);font-weight:700;}
+  .fcard p{font-size:12.5px;color:var(--gray);margin:0;line-height:1.4;}
+
+  /* stat highlight (red/orange box like slide 3 & 5) */
+  .stats-row{display:flex;gap:14px;margin-top:18px;}
+  .stat{background:var(--orange);color:#fff;border-radius:12px;padding:18px 16px;flex:1;}
+  .stat .n{font-size:26px;font-weight:800;}
+  .stat .l{font-size:11.5px;opacity:.9;margin-top:4px;}
+
+  .panel{background:var(--orange);border-radius:18px;padding:30px 34px;color:#fff;display:flex;gap:30px;align-items:center;flex:1;}
+  .panel .left{flex:1;}
+  .panel h2{font-size:26px;margin:0 0 12px;font-weight:800;}
+  .panel p{font-size:15px;line-height:1.5;opacity:.95;}
+  .panel .right{flex:0 0 240px;display:flex;flex-direction:column;gap:10px;}
+  .panel .rstat{background:rgba(255,255,255,.18);border-radius:10px;padding:12px 14px;}
+  .panel .rstat .n{font-size:22px;font-weight:800;}
+  .panel .rstat .l{font-size:11px;opacity:.9;}
+
+  /* demo split */
+  .demo-row{display:flex;gap:36px;flex:1;min-height:0;}
+  .demo-col{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .demo-col.img{justify-content:flex-start;}
+  .shot{width:100%;border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.18);border:1px solid var(--line);}
+  .pill{display:inline-block;background:var(--orange-light);color:var(--orange-dark);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-right:6px;}
+
+  .thanks{background:var(--orange);justify-content:center;align-items:center;display:flex;}
+  .thanks h1{color:#fff;font-size:62px;font-weight:800;}
+
   .nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10;}
-  .nav button{background:#1e293b;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;}
-  .nav button:hover{background:#334155;}
-  .progress{position:fixed;top:0;left:0;height:4px;background:var(--blue);transition:width .3s;z-index:10;}
+  .nav button{background:var(--ink);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;}
+  .nav button:hover{background:#333;}
+  .progress{position:fixed;top:0;left:0;height:4px;background:var(--orange);transition:width .3s;z-index:10;}
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
 
   <section class="slide cover active">
-    <h1>Calypso Knowledge Hub</h1>
-    <p>IA agéntica aplicada a capacitación financiera interna</p>
-    <div class="tag">Hackatón interna · Claude Code</div>
-  </section>
-
-  <section class="slide">
-    <div class="kicker">El problema</div>
-    <h2>Calypso es difícil de aprender</h2>
-    <ul>
-      <li>Calypso es una plataforma compleja, con una curva de aprendizaje alta para nuevos analistas y consultores.</li>
-      <li>Los conceptos financieros que la sustentan (Forward FX, NDF, tasas, pricing) no son intuitivos para quien no tiene formación financiera previa.</li>
-      <li>No existe hoy una herramienta interna interactiva para capacitar en estos conceptos — el conocimiento vive disperso en documentos y personas.</li>
-    </ul>
-  </section>
-
-  <section class="slide">
-    <div class="kicker">La solución</div>
-    <h2>Calypso Knowledge Hub</h2>
-    <ul>
-      <li>Plataforma de capacitación interactiva construida con IA agéntica (Claude Code).</li>
-      <li>Esta demo de hackatón corre 100% local, sin backend ni costos de infraestructura — pensada para uso interno de la empresa.</li>
-      <li>La arquitectura ya está preparada para evolucionar hacia un <strong>back office</strong> real (usuarios, persistencia, versionado de contenido) cuando se quiera llevar a producción.</li>
-    </ul>
-  </section>
-
-  <section class="slide">
-    <div class="kicker">Funcionalidades</div>
-    <h2>Qué incluye el MVP</h2>
-    <div class="grid2">
-      <div class="card"><h3>Simulador FX</h3><p>FX Spot, Forward FX y FX NDF, con cálculo de cashflows en tiempo real.</p></div>
-      <div class="card"><h3>Diccionario interactivo</h3><p>Hover sobre cualquier valor calculado: definición, fórmula y origen del dato.</p></div>
-      <div class="card"><h3>Editor de XML de trades</h3><p>Carga, edita y exporta trades de Calypso en formato <strong>CDUF</strong>.</p></div>
-      <div class="card"><h3>Gestión de contenido</h3><p>Página centralizada para proponer nuevos términos del diccionario.</p></div>
+    <div class="cover-card">
+      <div class="cover-corner"></div>
+      <div class="tag">Hackatón interna · Claude Code</div>
+      <h1>Calypso Knowledge Hub</h1>
+      <p>IA agéntica aplicada a capacitación financiera interna</p>
     </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Demo</div>
-    <h2>Simulador de Forward FX</h2>
-    <div class="content-row">
-      <div class="col">
-        <p>Cálculo de Forward Rate con la fórmula de <strong>Covered Interest Rate Parity (CIP)</strong>, mostrando paso a paso cómo se llega al resultado con los valores reales ingresados.</p>
-        <p>Soporta FX Spot, Forward FX y FX NDF desde el mismo motor, configurado por archivos JSON por producto.</p>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">El problema</div>
+      <h2 class="t">Calypso es difícil de aprender</h2>
+      <div class="numlist">
+        <div class="numitem"><div class="badge">01</div><div><h3>Curva de aprendizaje alta</h3><p>Calypso es una plataforma compleja para nuevos analistas y consultores.</p></div></div>
+        <div class="numitem"><div class="badge">02</div><div><h3>Conceptos poco intuitivos</h3><p>Forward FX, NDF, tasas y pricing no son fáciles de entender sin formación financiera previa.</p></div></div>
+        <div class="numitem"><div class="badge">03</div><div><h3>Sin herramienta interna</h3><p>El conocimiento vive disperso en documentos y personas, no en una herramienta interactiva.</p></div></div>
       </div>
-      <div class="col img"><img class="shot" src="img/simulador-forward.png"></div>
     </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Demo</div>
-    <h2>Diccionario interactivo</h2>
-    <div class="content-row">
-      <div class="col">
-        <p>Cada término del simulador tiene su definición, fórmula y origen del dato, organizados por módulo.</p>
-        <p>Etiquetado claro: <span class="badge">TRANSFERIBLE</span> para conceptos aplicables a otras plataformas, vs. específico de Calypso.</p>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">La solución</div>
+      <div class="panel">
+        <div class="left">
+          <h2>Calypso Knowledge Hub</h2>
+          <p>Plataforma de capacitación interactiva construida con IA agéntica (Claude Code). Esta demo de hackatón corre 100% local, sin backend ni costos de infraestructura — pensada para uso interno de la empresa.</p>
+          <p>La arquitectura ya está preparada para evolucionar hacia un <strong>back office</strong> real (usuarios, persistencia, versionado de contenido) cuando se quiera llevar a producción.</p>
+        </div>
+        <div class="right">
+          <div class="rstat"><div class="n">4</div><div class="l">Módulos funcionales</div></div>
+          <div class="rstat"><div class="n">100%</div><div class="l">Local, sin backend pagado</div></div>
+          <div class="rstat"><div class="n">14</div><div class="l">Pull Requests entregados</div></div>
+        </div>
       </div>
-      <div class="col img"><img class="shot" src="img/diccionario.png"></div>
     </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Demo</div>
-    <h2>Editor de XML de trades (CDUF)</h2>
-    <div class="content-row">
-      <div class="col">
-        <p>Carga un XML de trade de Calypso y lo convierte en un formulario editable, con jerarquía visual de 3 niveles.</p>
-        <p>Campos y bloques repetibles (duplicar contrapartes, agregar valores), y exportación de vuelta a formato CDUF.</p>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Funcionalidades</div>
+      <h2 class="t">Qué incluye el MVP</h2>
+      <div class="grid4">
+        <div class="fcard"><div class="ico">⇄</div><h3>Simulador FX</h3><p>FX Spot, Forward FX y FX NDF, con cálculo de cashflows en tiempo real.</p></div>
+        <div class="fcard"><div class="ico">📖</div><h3>Diccionario interactivo</h3><p>Hover sobre cualquier valor calculado: definición, fórmula y origen del dato.</p></div>
+        <div class="fcard"><div class="ico">⚙</div><h3>Editor de XML (CDUF)</h3><p>Carga, edita y exporta trades de Calypso en formato CDUF.</p></div>
+        <div class="fcard"><div class="ico">🛠</div><h3>Gestión de contenido</h3><p>Página centralizada para proponer nuevos términos del diccionario.</p></div>
       </div>
-      <div class="col img"><img class="shot" src="img/xml-editor.png"></div>
     </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Demo</div>
-    <h2>Gestión de contenido</h2>
-    <div class="content-row">
-      <div class="col">
-        <p>Formulario para proponer nuevos términos al diccionario sin tocar código.</p>
-        <p>Pensado para recibir entradas generadas externamente con IA, manteniendo el control de calidad humano.</p>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Demo</div>
+      <h2 class="t">Simulador de Forward FX</h2>
+      <div class="demo-row">
+        <div class="demo-col">
+          <p class="lead">Cálculo de Forward Rate con la fórmula de <strong>Covered Interest Rate Parity (CIP)</strong>, mostrando paso a paso cómo se llega al resultado con los valores reales ingresados.</p>
+          <p class="lead">Soporta FX Spot, Forward FX y FX NDF desde el mismo motor, configurado por archivos JSON por producto.</p>
+        </div>
+        <div class="demo-col img"><img class="shot" src="img/simulador-forward.png"></div>
       </div>
-      <div class="col img"><img class="shot" src="img/gestion.png"></div>
     </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Cómo se construyó</div>
-    <h2>Buenas prácticas de IA agéntica</h2>
-    <ul>
-      <li><strong>Plan antes de código:</strong> ningún cambio se implementó sin presentar el plan y obtener confirmación explícita.</li>
-      <li><strong>Validación financiera humana obligatoria:</strong> cada fórmula se explicó en términos simples y se confirmó su fuente antes de implementarla — ninguna fórmula se inventó.</li>
-      <li><strong>Una feature por sesión/commit:</strong> 14 Pull Requests en el historial, cambios pequeños y revisables.</li>
-      <li><strong>Arquitectura por configuración:</strong> agregar un producto financiero nuevo no requiere tocar el motor de cálculo.</li>
-      <li><strong>Convenciones consistentes:</strong> commits en español, ramas descriptivas, hooks de verificación antes de cada push.</li>
-    </ul>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Demo</div>
+      <h2 class="t">Diccionario interactivo</h2>
+      <div class="demo-row">
+        <div class="demo-col">
+          <p class="lead">Cada término del simulador tiene su definición, fórmula y origen del dato, organizados por módulo.</p>
+          <p class="lead"><span class="pill">TRANSFERIBLE</span> para conceptos aplicables a otras plataformas, vs. específico de Calypso.</p>
+        </div>
+        <div class="demo-col img"><img class="shot" src="img/diccionario.png"></div>
+      </div>
+    </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Valor para el negocio</div>
-    <h2>Por qué esto importa</h2>
-    <ul>
-      <li>Reduce la curva de aprendizaje de nuevos analistas y consultores Calypso.</li>
-      <li>Costo marginal prácticamente nulo en esta etapa: sin licencias, sin backend pagado.</li>
-      <li>Arquitectura lista para escalar a un back office real, sin reescribir el motor de cálculo ni la interfaz.</li>
-      <li>Metodología reusable: el mismo enfoque de IA agéntica aplica a otras herramientas internas de la empresa.</li>
-    </ul>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Demo</div>
+      <h2 class="t">Editor de XML de trades (CDUF)</h2>
+      <div class="demo-row">
+        <div class="demo-col">
+          <p class="lead">Carga un XML de trade de Calypso y lo convierte en un formulario editable, con jerarquía visual de 3 niveles.</p>
+          <p class="lead">Campos y bloques repetibles (duplicar contrapartes, agregar valores), y exportación de vuelta a formato CDUF.</p>
+        </div>
+        <div class="demo-col img"><img class="shot" src="img/xml-editor.png"></div>
+      </div>
+    </div>
   </section>
 
   <section class="slide">
-    <div class="kicker">Próximos pasos</div>
-    <h2>Roadmap</h2>
-    <ul>
-      <li>Back office: gestión de usuarios, persistencia real y versionado de contenido.</li>
-      <li>Ficha de configuración de producto generada por IA.</li>
-      <li>Más productos financieros en el simulador.</li>
-      <li>Más colaboradores aportando al diccionario.</li>
-    </ul>
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Demo</div>
+      <h2 class="t">Gestión de contenido</h2>
+      <div class="demo-row">
+        <div class="demo-col">
+          <p class="lead">Formulario para proponer nuevos términos al diccionario sin tocar código.</p>
+          <p class="lead">Pensado para recibir entradas generadas externamente con IA, manteniendo el control de calidad humano.</p>
+        </div>
+        <div class="demo-col img"><img class="shot" src="img/gestion.png"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Cómo se construyó</div>
+      <h2 class="t">Buenas prácticas de IA agéntica</h2>
+      <div class="numlist">
+        <div class="numitem"><div class="badge">01</div><div><h3>Plan antes de código</h3><p>Ningún cambio se implementó sin presentar el plan y obtener confirmación explícita.</p></div></div>
+        <div class="numitem"><div class="badge">02</div><div><h3>Validación financiera humana</h3><p>Cada fórmula se explicó en términos simples y se confirmó su fuente antes de implementarla — ninguna se inventó.</p></div></div>
+        <div class="numitem"><div class="badge">03</div><div><h3>Una feature por commit</h3><p>14 Pull Requests en el historial, cambios pequeños y revisables.</p></div></div>
+        <div class="numitem"><div class="badge">04</div><div><h3>Arquitectura por configuración</h3><p>Agregar un producto financiero nuevo no requiere tocar el motor de cálculo.</p></div></div>
+        <div class="numitem"><div class="badge">05</div><div><h3>Convenciones consistentes</h3><p>Commits en español, ramas descriptivas, hooks de verificación antes de cada push.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Valor para el negocio</div>
+      <h2 class="t">Por qué esto importa</h2>
+      <div class="stats-row">
+        <div class="stat"><div class="n">↓</div><div class="l">Menor curva de aprendizaje</div></div>
+        <div class="stat"><div class="n">$0</div><div class="l">Costo marginal en esta etapa</div></div>
+        <div class="stat"><div class="n">N</div><div class="l">Productos escalables sin reescribir motor</div></div>
+      </div>
+      <div class="numlist" style="margin-top:18px;">
+        <div class="numitem"><div class="badge">01</div><div><h3>Onboarding más rápido</h3><p>Reduce la curva de aprendizaje de nuevos analistas y consultores Calypso.</p></div></div>
+        <div class="numitem"><div class="badge">02</div><div><h3>Costo casi nulo</h3><p>Sin licencias, sin backend pagado en esta etapa de demo.</p></div></div>
+        <div class="numitem"><div class="badge">03</div><div><h3>Lista para escalar</h3><p>Arquitectura preparada para un back office real, sin reescribir motor ni interfaz.</p></div></div>
+        <div class="numitem"><div class="badge">04</div><div><h3>Metodología reusable</h3><p>El mismo enfoque de IA agéntica aplica a otras herramientas internas de la empresa.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="topbar"><div class="brand"><div class="sq"></div><span>Calypso Hub</span></div><div class="corner"></div></div>
+    <div class="body">
+      <div class="kicker">Próximos pasos</div>
+      <h2 class="t">Roadmap</h2>
+      <div class="numlist">
+        <div class="numitem"><div class="badge">01</div><div><h3>Back office</h3><p>Gestión de usuarios, persistencia real y versionado de contenido.</p></div></div>
+        <div class="numitem"><div class="badge">02</div><div><h3>Ficha de producto por IA</h3><p>Generación asistida de la ficha de configuración del producto simulado.</p></div></div>
+        <div class="numitem"><div class="badge">03</div><div><h3>Más productos financieros</h3><p>Ampliar el simulador a nuevos instrumentos.</p></div></div>
+        <div class="numitem"><div class="badge">04</div><div><h3>Más colaboradores</h3><p>Crecer el diccionario con aportes del equipo.</p></div></div>
+      </div>
+    </div>
   </section>
 
   <section class="slide thanks">
