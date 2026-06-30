@@ -71,7 +71,7 @@
   .shot{width:100%;border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.18);border:1px solid var(--line);}
   .pill{display:inline-block;background:var(--orange-light);color:var(--orange-dark);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-right:6px;}
 
-  .thanks{background:var(--orange);justify-content:center;align-items:center;display:flex;}
+  .thanks{background:var(--orange);justify-content:center;align-items:center;}
   .thanks h1{color:#fff;font-size:62px;font-weight:800;}
 
   .nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10;}
@@ -146,7 +146,7 @@
       <div class="demo-row">
         <div class="demo-col">
           <p class="lead">Cálculo de Forward Rate con la fórmula de <strong>Covered Interest Rate Parity (CIP)</strong>, mostrando paso a paso cómo se llega al resultado con los valores reales ingresados.</p>
-          <p class="lead">Soporta FX Spot, Forward FX y FX NDF desde el mismo motor, configurado por archivos JSON por producto.</p>
+          <p class="lead">Soporta FX Spot, Forward FX y FX NDF, configurados por archivos JSON por producto.</p>
         </div>
         <div class="demo-col img"><img class="shot" src="img/simulador-forward.png"></div>
       </div>
@@ -207,7 +207,7 @@
         <div class="numitem"><div class="badge">01</div><div><h3>Plan antes de código</h3><p>Ningún cambio se implementó sin presentar el plan y obtener confirmación explícita.</p></div></div>
         <div class="numitem"><div class="badge">02</div><div><h3>Validación financiera humana</h3><p>Cada fórmula se explicó en términos simples y se confirmó su fuente antes de implementarla — ninguna se inventó.</p></div></div>
         <div class="numitem"><div class="badge">03</div><div><h3>Una feature por commit</h3><p>14 Pull Requests en el historial, cambios pequeños y revisables.</p></div></div>
-        <div class="numitem"><div class="badge">04</div><div><h3>Arquitectura por configuración</h3><p>Agregar un producto financiero nuevo no requiere tocar el motor de cálculo.</p></div></div>
+        <div class="numitem"><div class="badge">04</div><div><h3>Arquitectura extensible por motores</h3><p>Cada producto financiero tiene su propio motor de cálculo; agregar uno nuevo no modifica los motores existentes, solo se suma uno más.</p></div></div>
         <div class="numitem"><div class="badge">05</div><div><h3>Convenciones consistentes</h3><p>Commits en español, ramas descriptivas, hooks de verificación antes de cada push.</p></div></div>
       </div>
     </div>
@@ -221,12 +221,12 @@
       <div class="stats-row">
         <div class="stat"><div class="n">↓</div><div class="l">Menor curva de aprendizaje</div></div>
         <div class="stat"><div class="n">$0</div><div class="l">Costo marginal en esta etapa</div></div>
-        <div class="stat"><div class="n">N</div><div class="l">Productos escalables sin reescribir motor</div></div>
+        <div class="stat"><div class="n">N</div><div class="l">Productos escalables agregando nuevos motores</div></div>
       </div>
       <div class="numlist" style="margin-top:18px;">
         <div class="numitem"><div class="badge">01</div><div><h3>Onboarding más rápido</h3><p>Reduce la curva de aprendizaje de nuevos analistas y consultores Calypso.</p></div></div>
         <div class="numitem"><div class="badge">02</div><div><h3>Costo casi nulo</h3><p>Sin licencias, sin backend pagado en esta etapa de demo.</p></div></div>
-        <div class="numitem"><div class="badge">03</div><div><h3>Lista para escalar</h3><p>Arquitectura preparada para un back office real, sin reescribir motor ni interfaz.</p></div></div>
+        <div class="numitem"><div class="badge">03</div><div><h3>Lista para escalar</h3><p>Arquitectura preparada para un back office real y para sumar nuevos motores de producto sin tocar los existentes.</p></div></div>
         <div class="numitem"><div class="badge">04</div><div><h3>Metodología reusable</h3><p>El mismo enfoque de IA agéntica aplica a otras herramientas internas de la empresa.</p></div></div>
       </div>
     </div>
