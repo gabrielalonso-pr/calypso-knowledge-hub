@@ -1211,6 +1211,86 @@ body.has-sidebar { overflow-x: hidden; }
 .tooltip-cat--personal { background: var(--gray-100); color: var(--gray-600); }
 
 /* ══════════════════════════════════════════════════════════════════════
+   GESTIÓN — manage.html
+   ══════════════════════════════════════════════════════════════════════ */
+
+.mgmt-tabs {
+  display: flex;
+  gap: .35rem;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.mgmt-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: .6rem .9rem;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  transition: color .13s, border-color .13s;
+}
+.mgmt-tab:hover  { color: var(--blue-700); }
+.mgmt-tab.active { color: var(--blue-700); border-color: var(--blue-600); }
+
+.mgmt-panel        { display: none; }
+.mgmt-panel.active { display: block; }
+
+.mgmt-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.1rem;
+}
+.mgmt-card-title { font-size: .88rem; font-weight: 700; color: var(--gray-900); margin-bottom: .4rem; }
+.mgmt-card-desc  { font-size: .78rem; color: var(--gray-500); line-height: 1.55; margin-bottom: .85rem; }
+
+.mgmt-inline-form .form-field { padding: 0 0 .85rem; }
+.mgmt-inline-form .form-actions { padding: 0; border-top: none; margin-top: 0; }
+
+.mgmt-template-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: .85rem;
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  color: var(--gray-700);
+  white-space: pre-wrap;
+  max-height: 360px;
+  overflow-y: auto;
+  margin-bottom: .6rem;
+}
+
+.mgmt-preview {
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius);
+  padding: .85rem;
+  margin-top: .85rem;
+  background: var(--gray-50);
+}
+.mgmt-preview-empty { color: var(--gray-400); font-size: .8rem; }
+
+.mgmt-issue-list { margin: .4rem 0 0; padding-left: 1.1rem; font-size: .78rem; color: var(--red-600); }
+
+.mgmt-textarea {
+  width: 100%;
+  min-height: 160px;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+}
+
+.mgmt-btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+
+/* ══════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════════ */
 
